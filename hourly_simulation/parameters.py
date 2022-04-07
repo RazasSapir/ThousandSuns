@@ -1,6 +1,9 @@
 import pandas as pd
 # todo: add units
 
+# prediction
+GROWTH_PER_YEAR = 1.28
+
 # Batteries
 BATTERY_EFFICIENCY = 0.89   # %
 BATTERY_DEPTH = 0.8         # %
