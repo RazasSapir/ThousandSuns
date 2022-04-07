@@ -7,13 +7,14 @@ def greedy_use_strategy(demand: pd.DataFrame, production: pd.DataFrame, battery_
     :param demand: pd.DataFrame(columns=['HourOfYear', 'Demand'])
     :param production: pd.DataFrame(columns=['HourOfYear', 'SolarProduction'])
     :param battery_storage: int size of battery
-    :return: pd.DataFrame(columns=['GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored', 'SolarLost'])
+    :return: pd.DataFrame(columns=['DayOfYear', 'GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored', 'SolarLost'])
     """
     hourly_use = pd.DataFrame(columns=['GasUsage', 'SunUsage', 'StoredUsage', 'SunStored', 'SunLost'])
     storage = 0
-    next_hour = {'GasUsage': 0, 'SunUsage': 0, 'StoredUsage': 0, 'SunStored': 0, 'SunLost': 0}
+    next_hour = {'HourOfYear': 0, 'GasUsage': 0, 'SunUsage': 0, 'StoredUsage': 0, 'SunStored': 0, 'SunLost': 0}
     electricity_data = pd.merge(demand, production, on="HourOfYear")
     for row in electricity_data.itertuples():
+        next_hour['HourOfYear'] = row.HourOfYear
         if storage > 0:
             next_hour["StoredUsage"] = min(storage, row.Demand)
             storage -= min(storage, row.Demand)

@@ -1,7 +1,7 @@
 import pandas as pd
 
 
-def get_consumption(demand_path: str) -> pd.DataFrame:
+def get_demand(demand_path: str) -> pd.DataFrame:
     """
     Open csv as DataFrame and preprocess the data
     :param demand_path: relative path to total yearly demand
