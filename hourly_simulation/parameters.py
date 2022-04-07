@@ -1,6 +1,10 @@
 import pandas as pd
 # todo: add units
 
+# FILE_PATHS
+DEMAND_FILE_PATH = ""
+PANEL_PRODUCTION_PATH = ""
+
 # Batteries
 BATTERY_EFFICIENCY = 0.89   # %
 BATTERY_DEPTH = 0.8         # %
