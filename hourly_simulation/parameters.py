@@ -5,6 +5,9 @@ import pandas as pd
 DEMAND_FILE_PATH = ""
 PANEL_PRODUCTION_PATH = ""
 
+# prediction
+GROWTH_PER_YEAR = 1.28
+
 # Batteries
 BATTERY_EFFICIENCY = 0.89   # %
 BATTERY_DEPTH = 0.8         # %
