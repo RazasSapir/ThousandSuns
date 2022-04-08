@@ -1,5 +1,8 @@
 import pandas as pd
 
+from constants import *
+from parameters import GROWTH_PER_YEAR
+
 
 def predict_demand_in_year(hourly_demand: pd.DataFrame, year_wanted: int) -> pd.DataFrame:
     """
@@ -9,6 +12,6 @@ def predict_demand_in_year(hourly_demand: pd.DataFrame, year_wanted: int) -> pd.
     :return: new pd.DataFrame(columns=['HourOfYear', 'Demand']) of the wanted year with extrapolation
     """
     s = hourly_demand.copy()
-    s[s.columns[1]] *= 1.28 ** (year_wanted - int(s.columns[1]))
-    s = s.rename(columns={s.columns[1]: "Demand"})
+    s[s.columns[1]] *= GROWTH_PER_YEAR ** (year_wanted - int(s.columns[1]))
+    s = s.rename(columns={s.columns[1]: Demand})
     return s

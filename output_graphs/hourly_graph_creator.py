@@ -12,6 +12,10 @@ colors = {
 }
 
 
+# todo: remove strings with constants
+# todo: add battery level line
+# todo: add demand line as sum of all usage values
+# todo: add docstring
 def yearly_graph(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
     x = [i for i in range(len(yearly_stats.index) + 1)]
     yearly_stats = yearly_stats.groupby(yearly_stats.index // num_hours_to_sum).sum()
@@ -25,14 +29,17 @@ def yearly_graph(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
                              line=dict(width=0.5, color=colors['SolarUsage']),
                              stackgroup='one'))
     fig.add_trace(go.Scatter(x=x, y=yearly_stats['StoredUsage'], name='StoredUsage', marker_color=colors['StoredUsage'],
-                         opacity=0.85, hoverinfo='x+y', mode='lines', line=dict(width=0.5, color=colors['StoredUsage']),
-    stackgroup='one'))
+                             opacity=0.85, hoverinfo='x+y', mode='lines',
+                             line=dict(width=0.5, color=colors['StoredUsage']),
+                             stackgroup='one'))
     fig.add_trace(go.Scatter(x=x, y=yearly_stats['SolarStored'], name='SolarStored', marker_color=colors['SolarStored'],
-                         opacity=0.85, hoverinfo='x+y', mode='lines', line=dict(width=0.5, color=colors['SolarStored']),
-    stackgroup='one'))
+                             opacity=0.85, hoverinfo='x+y', mode='lines',
+                             line=dict(width=0.5, color=colors['SolarStored']),
+                             stackgroup='one'))
     fig.add_trace(go.Scatter(x=x, y=yearly_stats['SolarLost'], name='SolarLost', marker_color=colors['SolarLost'],
-                         opacity=0.85, hoverinfo='x+y', mode='lines', line=dict(width=0.5, color=colors['SolarLost']),
-    stackgroup='one'))
+                             opacity=0.85, hoverinfo='x+y', mode='lines',
+                             line=dict(width=0.5, color=colors['SolarLost']),
+                             stackgroup='one'))
     fig.update_layout(barmode='stack'
                       , title='Day Usage'
                       , xaxis_title='Day In Year'
@@ -57,7 +64,6 @@ def daily_graph(daily_stats: pd.DataFrame):
                       , title='Daily Usage'
                       , xaxis_title='Hour in Day'
                       , yaxis_title='Usage (kWh)')
-
     fig.show()
 
 

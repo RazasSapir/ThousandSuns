@@ -15,7 +15,7 @@ def __get_solar_production_profile(normalised_production: pd.DataFrame, power_so
     :return: total production of solar panels pd.DataFrame(columns=['HourOfYear', 'SolarProduction'])
     """
     total_production = normalised_production.copy()
-    total_production["SolarProduction"] *= power_solar_panels
+    total_production[SolarProduction] *= power_solar_panels
     return total_production
 
 
@@ -29,8 +29,8 @@ def __calculate_cost(electricity_usage: pd.DataFrame, battery_capacity: float, p
     :param electricity_usage: pd.DataFrame(columns=['HourOfYear', 'GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored', 'SolarLost'])
     :return: float cost of the given electricity usage
     """
-    gas_usage = electricity_usage["GasUsage"]
-    gas_cost_per_hour = ELECTRICITY_COST.loc[electricity_usage.HourOfYear, "Cost ILS/Kwh"]
+    gas_usage = electricity_usage[GasUsage]
+    gas_cost_per_hour = ELECTRICITY_COST.loc[electricity_usage.HourOfYear, COST]
     total_gas_cost = gas_usage.to_numpy().dot(gas_cost_per_hour.to_numpy())
     total_solar_opex = power_solar_panels * SOLAR_OPEX
     total_solar_capex = power_solar_panels * SOLAR_CAPEX / time_span
