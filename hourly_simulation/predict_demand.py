@@ -1,7 +1,7 @@
 import pandas as pd
 
-from constants import *
-from parameters import GROWTH_PER_YEAR
+from hourly_simulation.constants import *
+from hourly_simulation.parameters import GROWTH_PER_YEAR
 
 
 def predict_demand_in_year(hourly_demand: pd.DataFrame, year_wanted: int) -> pd.DataFrame:

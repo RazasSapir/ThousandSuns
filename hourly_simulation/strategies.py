@@ -1,6 +1,6 @@
 import pandas as pd
 
-from constants import *
+from hourly_simulation.constants import *
 
 
 def greedy_use_strategy(demand: pd.DataFrame, production: pd.DataFrame, battery_storage: int) -> pd.DataFrame:
