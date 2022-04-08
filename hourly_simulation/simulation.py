@@ -26,12 +26,12 @@ def __calculate_cost(electricity_usage: pd.DataFrame, battery_capacity: float, p
     :param time_span: the time of the run
     :param power_solar_panels: int power of panel Kwh
     :param battery_capacity: float capacity of batteries in Kwh
-    :param electricity_usage: pd.DataFrame(columns=['DayOfYear', 'GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored', 'SolarLost'])
+    :param electricity_usage: pd.DataFrame(columns=['HourOfYear', 'GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored', 'SolarLost'])
     :return: float cost of the given electricity usage
     """
-    gas_usage = electricity_usage.loc[:, "GasUsage"]
-    gas_cost_per_hour = ELECTRICITY_COST.loc[gas_usage.DayOfYear, "Cost ILS/Kwh"]
-    total_gas_cost = gas_usage.dot(gas_cost_per_hour)
+    gas_usage = electricity_usage["GasUsage"]
+    gas_cost_per_hour = ELECTRICITY_COST.loc[electricity_usage.HourOfYear, "Cost ILS/Kwh"]
+    total_gas_cost = gas_usage.to_numpy().dot(gas_cost_per_hour.to_numpy())
     total_solar_opex = power_solar_panels * SOLAR_OPEX
     total_solar_capex = power_solar_panels * SOLAR_CAPEX / time_span
     total_battery_opex = battery_capacity * BATTERY_OPEX
