@@ -16,6 +16,7 @@ def greedy_use_strategy(demand: pd.DataFrame, production: pd.DataFrame, battery_
     electricity_data = pd.merge(demand, production, on=HourOfYear)
     for row in electricity_data.itertuples():
         needed_power = row.Demand
+        # Handle Early Stored Energy
         if storage > 0:
             stored_used = min(storage, needed_power)
             next_hour[StoredUsage].append(stored_used)
@@ -23,6 +24,7 @@ def greedy_use_strategy(demand: pd.DataFrame, production: pd.DataFrame, battery_
             storage -= stored_used
         else:
             next_hour[StoredUsage].append(0)
+        # Handle Produced Energy
         if row.SolarProduction >= needed_power:
             next_hour[GasUsage].append(0)
             next_hour[SolarUsage].append(needed_power)
