@@ -51,7 +51,7 @@ def __calculate_pollution(electricity_usage: ElectricityUseDf):
 
 
 def simulate_use(demand: DemandDf, normalised_production: ProductionDf, power_solar_panels: int,
-                 battery_storage: float, strategy: Callable, simulated_year: int) -> float:
+                 battery_storage: float, strategy: Callable, simulated_year: int, time_span: int = 1) -> float:
     """
     simulate the usages based of demand. number of solar panels and number of panels.
     :param demand: DemandDf of pd.DataFrame(columns=['HourOfYear', '$(Year)'])
@@ -65,4 +65,4 @@ def simulate_use(demand: DemandDf, normalised_production: ProductionDf, power_so
     future_demand: DemandDf = predict_demand_in_year(demand, simulated_year)
     total_panel_production: ProductionDf = __get_solar_production_profile(normalised_production, power_solar_panels)
     electricity_use: ElectricityUseDf = strategy(future_demand, total_panel_production, battery_storage)
-    return __calculate_cost(electricity_use, battery_storage, power_solar_panels)
+    return __calculate_cost(electricity_use, battery_storage, power_solar_panels, time_span)
