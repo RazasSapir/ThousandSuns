@@ -1,17 +1,16 @@
-import pandas as pd
-
-from hourly_simulation.constants import *
+from df_objects.df_objects import *
 from hourly_simulation.parameters import GROWTH_PER_YEAR
 
 
-def predict_demand_in_year(hourly_demand: pd.DataFrame, year_wanted: int) -> pd.DataFrame:
+def predict_demand_in_year(hourly_demand: DemandDf, year_wanted: int) -> DemandDf:
     """
     Predict the growth in demand in a given year
-    :param hourly_demand: pd.DataFrame(columns=['HourOfYear', '$[Year]'])
+    :param hourly_demand: DemandDf of pd.DataFrame(columns=['HourOfYear', '$[Year]'])
     :param year_wanted: int year of the wanted output
-    :return: new pd.DataFrame(columns=['HourOfYear', 'Demand']) of the wanted year with extrapolation
+    :return: DemandDf of new pd.DataFrame(columns=['HourOfYear', 'Demand']) of the wanted year with extrapolation
     """
-    s = hourly_demand.copy()
-    s[s.columns[1]] *= GROWTH_PER_YEAR ** (year_wanted - int(s.columns[1]))
-    s = s.rename(columns={s.columns[1]: Demand})
-    return s
+    expected_demand = DemandDf(hourly_demand.df.copy())
+    expected_demand.df[expected_demand.Demand] *= GROWTH_PER_YEAR ** (year_wanted - int(expected_demand.Demand))
+    expected_demand.df = expected_demand.df.rename(columns={expected_demand.Demand: DemandDf.Demand})
+    expected_demand.Demand = DemandDf.Demand
+    return expected_demand

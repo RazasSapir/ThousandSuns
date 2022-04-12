@@ -1,4 +1,4 @@
-import pandas as pd
+from df_objects.df_objects import *
 # todo: add units
 
 # FILE_PATHS
@@ -16,13 +16,14 @@ BATTERY_CAPEX = 1004  # ILS per Kw
 
 # Electricity
 ELECTRICITY_COST_PATH = '../data/electricity_cost.csv'
-ELECTRICITY_COST = pd.read_csv(ELECTRICITY_COST_PATH)  # ILS per Kw
+ELECTRICITY_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_PATH))  # ILS per Kw
 
 # Solar Panels
 NATIONAL_SOLAR_PRODUCTION_PATH = '../data/national_solar_production.csv'
-NATIONAL_SOLAR_PRODUCTION = pd.read_csv(NATIONAL_SOLAR_PRODUCTION_PATH, index_col=0)
-NORMALISED_SOLAR_PRODUCTION = NATIONAL_SOLAR_PRODUCTION.copy()
-NORMALISED_SOLAR_PRODUCTION.SolarProduction /= NATIONAL_SOLAR_PRODUCTION.SolarProduction.max()
+NATIONAL_SOLAR_PRODUCTION = ProductionDf(pd.read_csv(NATIONAL_SOLAR_PRODUCTION_PATH, index_col=0))
+NORMALISED_SOLAR_PRODUCTION = ProductionDf(NATIONAL_SOLAR_PRODUCTION.df.copy())
+NORMALISED_SOLAR_PRODUCTION.df[NORMALISED_SOLAR_PRODUCTION.SolarProduction] /= \
+    NATIONAL_SOLAR_PRODUCTION.df[NATIONAL_SOLAR_PRODUCTION.SolarProduction].max()
 
 SOLAR_OPEX = 70.4  # ILS / kW / year
 SOLAR_CAPEX = 3300  # ILS per Kw
