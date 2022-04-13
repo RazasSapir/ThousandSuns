@@ -1,4 +1,5 @@
 import pandas as pd
+import parameters
 
 from hourly_simulation.constants import *
 
@@ -37,6 +38,45 @@ def greedy_use_strategy(demand: pd.DataFrame, production: pd.DataFrame, battery_
             next_hour[SolarStored].append(0)
             next_hour[SolarLost].append(0)
         current_battery_capacity += next_hour[SolarStored][-1]
+    hourly_use = pd.DataFrame.from_dict(next_hour)
+    hourly_use[HourOfYear] = electricity_data[HourOfYear]
+    return hourly_use
+
+
+def better_use_strategy(demand: pd.DataFrame, production: pd.DataFrame, battery_storage: int) -> pd.DataFrame:
+    """
+    This is the implementation of the better use strategy - using the solar produced whenever possible,
+    then the stored energy and only then using gas power
+    note: this would be the perfect strategy if the price for gas power would be the same during all hours
+    :param demand: pd.DataFrame(columns=[HourOfYear, 'Demand'])
+    :param production: pd.DataFrame(columns=[HourOfYear, 'SolarProduction'])
+    :param battery_storage: int size of battery
+    :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
+    """
+    storage = 0
+    next_hour = {GasUsage: [], SolarUsage: [], StoredUsage: [], SolarStored: [], SolarLost: []}
+    electricity_data = pd.merge(demand, production, on=HourOfYear)
+    for row in electricity_data.itertuples():
+        needed_power = row.Demand
+
+        solar_used = min(row.SolarProduction, needed_power)
+        next_hour[SolarUsage] = solar_used
+        needed_power -= solar_used
+
+        solar_stored = min(min(row.SolarProduction - solar_used, battery_storage - storage), parameters.CHARGE_POWER_MAGIC_NUMBER)
+        next_hour[SolarStored] = solar_stored
+        storage += solar_stored
+
+        solar_lost = row.SolarProduction - solar_used - solar_stored
+        next_hour[SolarLost] = solar_lost
+
+        stored_used = min(storage, needed_power)
+        next_hour[StoredUsage] = stored_used
+        storage -= stored_used
+        needed_power -= stored_used
+
+        next_hour[GasUsage] = needed_power
+
     hourly_use = pd.DataFrame.from_dict(next_hour)
     hourly_use[HourOfYear] = electricity_data[HourOfYear]
     return hourly_use
