@@ -1,10 +1,10 @@
 import logging
 
-from df_objects.df_objects import *
+from hourly_simulation.parameters import *
 
 
 def test_simulation(electricity_use: ElectricityUseDf, demand: DemandDf, production: ProductionDf,
-                    battery_capacity: float,
+                    num_batteries: float,
                     epsilon=0.05) -> None:
     """
     Running all the sanity checks
@@ -18,8 +18,8 @@ def test_simulation(electricity_use: ElectricityUseDf, demand: DemandDf, product
     test_non_negative(electricity_use)
     test_demand_is_reached(demand.df[demand.Demand], electricity_use, epsilon)
     test_production_is_used(production.df[production.SolarProduction], electricity_use, epsilon)
-    test_all_stored_is_used(electricity_use, battery_capacity)
-    test_battery_capacity_is_not_passed(electricity_use, battery_capacity, epsilon)
+    test_all_stored_is_used(electricity_use, num_batteries * BATTERY_CAPACITY)
+    test_battery_capacity_is_not_passed(electricity_use, num_batteries * BATTERY_CAPACITY, epsilon)
     logging.info("Passed all tests")
 
 

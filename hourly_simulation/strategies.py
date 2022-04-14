@@ -1,7 +1,5 @@
 from df_objects.df_objects import *
 
-CHARGE_POWER_MAGIC_NUMBER = 1000 * 5000
-
 
 def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capacity: int) -> ElectricityUseDf:
     """
@@ -43,14 +41,16 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capa
     return ElectricityUseDf(hourly_use)
 
 
-def better_use_strategy(demand: DemandDf, production: ProductionDf, battery_storage: int) -> ElectricityUseDf:
+def better_use_strategy(demand: DemandDf, production: ProductionDf, battery_capacity: float,
+                        battery_power: float) -> ElectricityUseDf:
     """
     This is the implementation of the better use strategy - using the solar produced whenever possible,
     then the stored energy and only then using gas power
     note: this would be the perfect strategy if the price for gas power would be the same during all hours
     :param demand: pd.DataFrame(columns=[HourOfYear, 'Demand'])
     :param production: pd.DataFrame(columns=[HourOfYear, 'SolarProduction'])
-    :param battery_storage: int size of battery
+    :param battery_capacity: float capacity of battery
+    :param battery_power: power of the battery
     :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
     """
     storage = 0
@@ -63,14 +63,14 @@ def better_use_strategy(demand: DemandDf, production: ProductionDf, battery_stor
         next_hour["SolarUsage"].append(solar_used)
         needed_power -= solar_used
 
-        solar_stored = min(min(row.SolarProduction - solar_used, battery_storage - storage), CHARGE_POWER_MAGIC_NUMBER)
+        solar_stored = min(min(row.SolarProduction - solar_used, battery_capacity - storage), battery_power)
         next_hour["SolarStored"].append(solar_stored)
         storage += solar_stored
 
         solar_lost = row.SolarProduction - solar_used - solar_stored
         next_hour["SolarLost"].append(solar_lost)
 
-        stored_used = min(storage, needed_power)
+        stored_used = min(min(storage, needed_power), battery_power)
         next_hour["StoredUsage"].append(stored_used)
         storage -= stored_used
         needed_power -= stored_used
