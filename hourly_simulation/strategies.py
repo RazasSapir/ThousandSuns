@@ -1,9 +1,6 @@
-from numba import jit
-
 from df_objects.df_objects import *
 
 
-@jit(nopython=True)
 def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capacity: int) -> ElectricityUseDf:
     """
     This is the implementation of the greedy use strategy - using the solar stored whenever possible
