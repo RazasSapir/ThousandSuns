@@ -1,7 +1,5 @@
-import pandas as pd
-import parameters
-
 from hourly_simulation.constants import *
+from hourly_simulation.parameters import *
 
 
 def greedy_use_strategy(demand: pd.DataFrame, production: pd.DataFrame, battery_capacity: int) -> pd.DataFrame:
@@ -60,22 +58,22 @@ def better_use_strategy(demand: pd.DataFrame, production: pd.DataFrame, battery_
         needed_power = row.Demand
 
         solar_used = min(row.SolarProduction, needed_power)
-        next_hour[SolarUsage] = solar_used
+        next_hour[SolarUsage].append(solar_used)
         needed_power -= solar_used
 
-        solar_stored = min(min(row.SolarProduction - solar_used, battery_storage - storage), parameters.CHARGE_POWER_MAGIC_NUMBER)
-        next_hour[SolarStored] = solar_stored
+        solar_stored = min(min(row.SolarProduction - solar_used, battery_storage - storage), CHARGE_POWER_MAGIC_NUMBER)
+        next_hour[SolarStored].append(solar_stored)
         storage += solar_stored
 
         solar_lost = row.SolarProduction - solar_used - solar_stored
-        next_hour[SolarLost] = solar_lost
+        next_hour[SolarLost].append(solar_lost)
 
         stored_used = min(storage, needed_power)
-        next_hour[StoredUsage] = stored_used
+        next_hour[StoredUsage].append(stored_used)
         storage -= stored_used
         needed_power -= stored_used
 
-        next_hour[GasUsage] = needed_power
+        next_hour[GasUsage].append(needed_power)
 
     hourly_use = pd.DataFrame.from_dict(next_hour)
     hourly_use[HourOfYear] = electricity_data[HourOfYear]
