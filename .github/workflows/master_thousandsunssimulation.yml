@@ -62,5 +62,5 @@ jobs:
           slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_9BD8A03885C34CD2BC14DA90FCA19CB2 }}
           
-      - name: Install dependencies
+      - name: Run UI/main.py
         run: python UI/main.py
