@@ -1,6 +1,5 @@
 from typing import Iterator, Tuple
 
-from hourly_simulation import strategies
 from hourly_simulation.parameters import *
 from hourly_simulation.simulation import simulate_use
 from preprocess.csv_to_pd import *
@@ -24,7 +23,7 @@ def run_scenarios(simulated_year: int, solar_panel_power_it: Iterator, battery_s
             simulation_results[(power_solar_panels, battery_storage)] = simulate_use(demand, single_panel_production,
                                                                                      power_solar_panels,
                                                                                      battery_storage,
-                                                                                     strategies.greedy_use_strategy,
+                                                                                     use_strategies.store_first_strategy,
                                                                                      simulated_year)
     df_results = pd.DataFrame(simulation_results)
     return df_results.idxmin().name

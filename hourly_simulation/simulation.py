@@ -50,10 +50,30 @@ def __calculate_pollution(electricity_usage: ElectricityUseDf):
     return 0
 
 
-def simulate_use(demand: DemandDf, normalised_production: ProductionDf, power_solar_panels: int,
+def get_usage_profile(demand: DemandDf, normalised_production: ProductionDf, power_solar_panels: float,
+                      num_batteries: float, strategy: Callable, simulated_year: int):
+    """
+    Simulate Usage Profile
+    :param demand:
+    :param normalised_production:
+    :param power_solar_panels:
+    :param num_batteries:
+    :param strategy:
+    :param simulated_year:
+    :return:
+    """
+    future_demand: DemandDf = predict_demand_in_year(demand, simulated_year)
+    total_panel_production: ProductionDf = __get_solar_production_profile(normalised_production, power_solar_panels)
+    electricity_use: ElectricityUseDf = strategy(future_demand, total_panel_production,
+                                                 BATTERY_CAPACITY * num_batteries, CHARGE_POWER * num_batteries)
+    return electricity_use
+
+
+def simulate_use(demand: DemandDf, normalised_production: ProductionDf, power_solar_panels: float,
                  num_batteries: float, strategy: Callable, simulated_year: int, time_span: int = 1) -> float:
     """
     simulate the usages based of demand. number of solar panels and number of panels.
+    :param time_span: time of which the system is expected to work
     :param demand: DemandDf of pd.DataFrame(columns=['HourOfYear', '$(Year)'])
     :param normalised_production: ProductionDf of pd.DataFrame(columns=['HourOfYear', 'SolarProduction']) between 0 and 1
     :param simulated_year: year to simulate
@@ -62,8 +82,6 @@ def simulate_use(demand: DemandDf, normalised_production: ProductionDf, power_so
     :param strategy: function responsible for handling the cost
     :return: (total_cost, total_pollution)
     """
-    future_demand: DemandDf = predict_demand_in_year(demand, simulated_year)
-    total_panel_production: ProductionDf = __get_solar_production_profile(normalised_production, power_solar_panels)
-    electricity_use: ElectricityUseDf = strategy(future_demand, total_panel_production,
-                                                 BATTERY_CAPACITY * num_batteries, CHARGE_POWER * num_batteries)
+    electricity_use = get_usage_profile(demand, normalised_production, power_solar_panels,
+                                        num_batteries, strategy, simulated_year)
     return calculate_cost(electricity_use, BATTERY_CAPACITY * num_batteries, power_solar_panels, time_span)

@@ -14,4 +14,4 @@
 
 ## Usage
 
-    python UI/main.py
+    python app.py
