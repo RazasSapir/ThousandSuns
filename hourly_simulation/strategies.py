@@ -3,6 +3,7 @@ from df_objects.df_objects import *
 
 def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capacity: int) -> ElectricityUseDf:
     """
+    Deprecated: not useful.
     This is the implementation of the greedy use strategy - using the solar stored whenever possible
     :param demand: DemandDf: pd.DataFrame(columns=[HourOfYear, 'Demand'])
     :param production: ProductionDf: pd.DataFrame(columns=[HourOfYear, 'SolarProduction'])
@@ -54,29 +55,30 @@ def better_use_strategy(demand: DemandDf, production: ProductionDf, battery_capa
     :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
     """
     storage = 0
-    next_hour = {"GasUsage": [], "SolarUsage": [], "StoredUsage": [], "SolarStored": [], "SolarLost": []}
-    electricity_data = pd.merge(demand.df, production.df, on="HourOfYear")
+    next_hour = {ElectricityUseDf.GasUsage: [], ElectricityUseDf.SolarUsage: [], ElectricityUseDf.StoredUsage: [],
+                 ElectricityUseDf.SolarStored: [], ElectricityUseDf.SolarLost: []}
+    electricity_data = pd.merge(demand.df, production.df, on=ElectricityUseDf.HourOfYear)
     for row in electricity_data.itertuples():
         needed_power = row.Demand
 
         solar_used = min(row.SolarProduction, needed_power)
-        next_hour["SolarUsage"].append(solar_used)
+        next_hour[ElectricityUseDf.SolarUsage].append(solar_used)
         needed_power -= solar_used
 
         solar_stored = min(min(row.SolarProduction - solar_used, battery_capacity - storage), battery_power)
-        next_hour["SolarStored"].append(solar_stored)
+        next_hour[ElectricityUseDf.SolarStored].append(solar_stored)
         storage += solar_stored
 
         solar_lost = row.SolarProduction - solar_used - solar_stored
-        next_hour["SolarLost"].append(solar_lost)
+        next_hour[ElectricityUseDf.SolarLost].append(solar_lost)
 
         stored_used = min(min(storage, needed_power), battery_power)
-        next_hour["StoredUsage"].append(stored_used)
+        next_hour[ElectricityUseDf.StoredUsage].append(stored_used)
         storage -= stored_used
         needed_power -= stored_used
 
-        next_hour["GasUsage"].append(needed_power)
+        next_hour[ElectricityUseDf.GasUsage].append(needed_power)
 
-    hourly_use = pd.DataFrame.from_dict(next_hour)
-    hourly_use["HourOfYear"] = electricity_data["HourOfYear"]
-    return ElectricityUseDf(hourly_use)
+    hourly_use = ElectricityUseDf(pd.DataFrame.from_dict(next_hour))
+    hourly_use.df[ElectricityUseDf.HourOfYear] = electricity_data[ElectricityUseDf.HourOfYear]
+    return hourly_use

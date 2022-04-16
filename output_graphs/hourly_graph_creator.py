@@ -16,7 +16,7 @@ colors = {
 # todo: add battery level line
 # todo: add demand line as sum of all usage values
 # todo: add docstring
-def yearly_graph(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
+def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
     x = [i for i in range(len(yearly_stats.index) + 1)]
     yearly_stats = yearly_stats.groupby(yearly_stats.index // num_hours_to_sum).sum()
     fig = go.Figure()
@@ -44,7 +44,11 @@ def yearly_graph(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
                       , title='Day Usage'
                       , xaxis_title='Day In Year'
                       , yaxis_title='Usage (kWh)')
-    fig.show()
+    return fig
+
+
+def yearly_graph(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
+    yearly_graph_fig(yearly_stats, num_hours_to_sum).show()
 
 
 def daily_graph(daily_stats: pd.DataFrame):

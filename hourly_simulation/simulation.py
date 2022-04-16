@@ -19,8 +19,8 @@ def __get_solar_production_profile(normalised_production: ProductionDf, power_so
     return total_production
 
 
-def __calculate_cost(electricity_usage: ElectricityUseDf, battery_capacity: float, power_solar_panels: int,
-                     time_span: float = 1) -> float:
+def calculate_cost(electricity_usage: ElectricityUseDf, battery_capacity: float, power_solar_panels: int,
+                   time_span: float = 1) -> float:
     """
 
     :param time_span: the time of the run
@@ -66,4 +66,4 @@ def simulate_use(demand: DemandDf, normalised_production: ProductionDf, power_so
     total_panel_production: ProductionDf = __get_solar_production_profile(normalised_production, power_solar_panels)
     electricity_use: ElectricityUseDf = strategy(future_demand, total_panel_production,
                                                  BATTERY_CAPACITY * num_batteries, CHARGE_POWER * num_batteries)
-    return __calculate_cost(electricity_use, BATTERY_CAPACITY * num_batteries, power_solar_panels, time_span)
+    return calculate_cost(electricity_use, BATTERY_CAPACITY * num_batteries, power_solar_panels, time_span)

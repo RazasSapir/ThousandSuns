@@ -7,3 +7,11 @@
 * Simulating microgrids with solar panel.
 * Finding the optimal combination of batteries and solar panels
 
+## Installation
+
+    git clone <path>
+    pip install -r requirements.txt
+
+## Usage
+
+    python main.py
