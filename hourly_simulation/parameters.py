@@ -18,11 +18,11 @@ BATTERY_OPEX = 15.6  # ILS / kW / year
 BATTERY_CAPEX = 1004  # ILS per Kw
 
 # Electricity
-ELECTRICITY_COST_PATH = '../data/electricity_cost.csv'
+ELECTRICITY_COST_PATH = 'data/electricity_cost.csv'
 ELECTRICITY_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_PATH))  # ILS per Kw
 
 # Solar Panels
-NATIONAL_SOLAR_PRODUCTION_PATH = '../data/national_solar_production.csv'
+NATIONAL_SOLAR_PRODUCTION_PATH = 'data/national_solar_production.csv'
 NATIONAL_SOLAR_PRODUCTION = ProductionDf(pd.read_csv(NATIONAL_SOLAR_PRODUCTION_PATH, index_col=0))
 NORMALISED_SOLAR_PRODUCTION = ProductionDf(NATIONAL_SOLAR_PRODUCTION.df.copy())
 NORMALISED_SOLAR_PRODUCTION.df[NORMALISED_SOLAR_PRODUCTION.SolarProduction] /= \

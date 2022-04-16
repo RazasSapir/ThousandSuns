@@ -2,7 +2,6 @@ import dash_bootstrap_components as dbc
 from dash import Dash, dcc, html, Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from hourly_simulation.parameters import *
 from hourly_simulation.simulation import *
 from output_graphs.hourly_graph_creator import *
 
@@ -61,8 +60,4 @@ def run_simulation(n_clicks, num_batteries, solar_panel_power_kw, simulated_year
 
 
 def main():
-    app.run_server(debug=True, host="0.0.0.0")
-
-
-if __name__ == '__main__':
-    main()
+    app.run_server(host="0.0.0.0")
