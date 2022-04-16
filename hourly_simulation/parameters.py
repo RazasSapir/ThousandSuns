@@ -37,5 +37,5 @@ BATTERY_LIFETIME = 0
 SOLAR_LIFETIME = 0
 
 # UI params
-demand_files = {"Hatzor": r'../data/consumption_hatzor.csv'}
+demand_files = {"Hatzor": r'data/consumption_hatzor.csv'}
 use_strategies = {"Greedy Demand": greedy_use_strategy}
