@@ -1,7 +1,7 @@
 from df_objects.df_objects import *
 
 
-def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capacity: int) -> ElectricityUseDf:
+def store_first_strategy(demand: DemandDf, production: ProductionDf, battery_capacity: int) -> ElectricityUseDf:
     """
     Deprecated: not useful.
     This is the implementation of the greedy use strategy - using the solar stored whenever possible
@@ -42,7 +42,7 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capa
     return ElectricityUseDf(hourly_use)
 
 
-def better_use_strategy(demand: DemandDf, production: ProductionDf, battery_capacity: float,
+def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capacity: float,
                         battery_power: float) -> ElectricityUseDf:
     """
     This is the implementation of the better use strategy - using the solar produced whenever possible,
