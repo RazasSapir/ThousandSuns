@@ -1,29 +1,33 @@
 from typing import Iterator, Tuple
 
+import pandas as pd
+
 from hourly_simulation.parameters import *
 from hourly_simulation.simulation import simulate_use
-from preprocess.csv_to_pd import *
+from hourly_simulation import strategies
+from tqdm import tqdm
 
 
-# todo: test and sanity checks
-def run_scenarios(simulated_year: int, solar_panel_power_it: Iterator, battery_size_it: Iterator) -> Tuple[
-    float, float]:
+def run_scenarios(demand: DemandDf, single_panel_production: ProductionDf, simulated_year: int,
+                  solar_panel_power_it: Iterator, num_batteries_it: Iterator, params: Params) -> \
+        Tuple[pd.DataFrame, pd.DataFrame]:
     """
     Run the simulation of various solar panel and battery combinations
+    :param demand:
+    :param single_panel_production:
     :param simulated_year: int year to simulate
     :param solar_panel_power_it: iterator for different solar panels
-    :param battery_size_it: iterator for different battery sizes
+    :param num_batteries_it: iterator for different battery sizes
     :return: Tuple of the best combination of (number of solar panels, size of battery)
     """
-    demand: DemandDf = DemandDf(get_demand(DEMAND_FILE_PATH))
-    single_panel_production: ProductionDf = ProductionDf(get_production(PANEL_PRODUCTION_PATH))
-    simulation_results = {}
-    for power_solar_panels in solar_panel_power_it:
-        for battery_storage in battery_size_it:
-            simulation_results[(power_solar_panels, battery_storage)] = simulate_use(demand, single_panel_production,
-                                                                                     power_solar_panels,
-                                                                                     battery_storage,
-                                                                                     use_strategies.store_first_strategy,
-                                                                                     simulated_year)
-    df_results = pd.DataFrame(simulation_results)
-    return df_results.idxmin().name
+    simulation_results = {'PowerSolar': [], 'BatteryCapacity': [], 'Cost': []}
+    for power_solar_panels in tqdm(solar_panel_power_it):
+        for num_batteries in num_batteries_it:
+            simulation_results['PowerSolar'].append(power_solar_panels)
+            simulation_results['BatteryCapacity'].append(num_batteries)
+            simulation_results['Cost'].append(
+                simulate_use(demand=demand, normalised_production=single_panel_production, params=params,
+                             power_solar_panels=power_solar_panels, num_batteries=num_batteries,
+                             strategy=strategies.greedy_use_strategy, simulated_year=simulated_year, time_span=25))
+    df_results = pd.DataFrame.from_dict(simulation_results)
+    return df_results, df_results.loc[df_results['Cost'].idxmin()]

@@ -1,21 +1,16 @@
 from hourly_simulation.strategies import *
-# todo: add units
-
-# FILE_PATHS
-DEMAND_FILE_PATH = ""
-PANEL_PRODUCTION_PATH = ""
 
 # prediction
-GROWTH_PER_YEAR = 1.028
+__GROWTH_PER_YEAR = 1.028
 
 # Batteries
-BATTERY_CAPACITY = 4000  # Kwh
-CHARGE_POWER = 1000  # Kw
+__BATTERY_CAPACITY = 4000  # Kwh
+__CHARGE_POWER = 2000  # Kw
 
 # BATTERY_EFFICIENCY = 0.89  # %
 # BATTERY_DEPTH = 0.8  # %
-BATTERY_OPEX = 15.6  # ILS / kW / year
-BATTERY_CAPEX = 1004  # ILS per Kw
+__BATTERY_OPEX = 15.6  # ILS / kW / year
+__BATTERY_CAPEX = 1000  # ILS / Kwh
 
 # Electricity
 ELECTRICITY_COST_PATH = 'data/electricity_cost.csv'
@@ -28,14 +23,30 @@ NORMALISED_SOLAR_PRODUCTION = ProductionDf(NATIONAL_SOLAR_PRODUCTION.df.copy())
 NORMALISED_SOLAR_PRODUCTION.df[NORMALISED_SOLAR_PRODUCTION.SolarProduction] /= \
     NATIONAL_SOLAR_PRODUCTION.df[NATIONAL_SOLAR_PRODUCTION.SolarProduction].max()
 
-SOLAR_OPEX = 70.4  # ILS / kW / year
-SOLAR_CAPEX = 3300  # ILS per Kw
+__SOLAR_OPEX = 70  # ILS / kW / year
+__SOLAR_CAPEX = 2600  # ILS / Kw
 
 # future constants
-MAXIMUM_SELLING_KWH = 1
-BATTERY_LIFETIME = 0
-SOLAR_LIFETIME = 0
+__MAXIMUM_SELLING_KWH = 1
+__BATTERY_LIFETIME = 0
+__SOLAR_LIFETIME = 0
+
+__simulation_params_dict = {
+    "GROWTH_PER_YEAR": __GROWTH_PER_YEAR,
+    "BATTERY_CAPACITY": __BATTERY_CAPACITY,
+    "CHARGE_POWER": __CHARGE_POWER,
+    "BATTERY_OPEX": __BATTERY_OPEX,
+    "BATTERY_CAPEX": __BATTERY_CAPEX,
+    "SOLAR_OPEX": __SOLAR_OPEX,
+    "SOLAR_CAPEX": __SOLAR_CAPEX
+}
+
+from collections import namedtuple
+
+Params = namedtuple('Params', __simulation_params_dict)
+simulation_params = Params(**__simulation_params_dict)
 
 # UI params
-demand_files = {"Hatzor": r'data/consumption_hatzor.csv'}
+demand_files = {"Hatzor": r'data/consumption_hatzor.csv',
+                "Ramat David": r'data/consumption_ramat_david.csv'}
 use_strategies = {"Greedy Demand": greedy_use_strategy}
