@@ -48,8 +48,8 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capa
     This is the implementation of the better use strategy - using the solar produced whenever possible,
     then the stored energy and only then using gas power
     note: this would be the perfect strategy if the price for gas power would be the same during all hours
-    :param demand: pd.DataFrame(columns=[HourOfYear, 'Demand'])
-    :param production: pd.DataFrame(columns=[HourOfYear, 'SolarProduction'])
+    :param demand: DemandDf: pd.DataFrame(columns=[HourOfYear, 'Demand'])
+    :param production: ProductionDf: pd.DataFrame(columns=[HourOfYear, 'SolarProduction'])
     :param battery_capacity: float capacity of battery
     :param battery_power: power of the battery
     :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
@@ -82,3 +82,17 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capa
     hourly_use = ElectricityUseDf(pd.DataFrame.from_dict(next_hour))
     hourly_use.df[ElectricityUseDf.HourOfYear] = electricity_data[ElectricityUseDf.HourOfYear]
     return hourly_use
+
+
+def smart_storing_strategy(demand: DemandDf, production: ProductionDf, cost_profile: CostElectricityDf,
+                           battery_capacity: float, battery_power: float) -> ElectricityUseDf:
+    """
+    Given a Rect cost function CostElectricityDf
+    :param demand: DemandDf: pd.DataFrame(columns=[HourOfYear, 'Demand'])
+    :param production: ProductionDf: pd.DataFrame(columns=[HourOfYear, 'SolarProduction'])
+    :param cost_profile: CostElectricityDf wrapper of pd.DataFrame with Cost and HourOfYear
+    :param battery_capacity: float capacity of battery
+    :param battery_power: power of the battery
+    :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
+    """
+    raise NotImplementedError()
