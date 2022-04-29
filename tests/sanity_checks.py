@@ -19,6 +19,7 @@ def test_simulation(electricity_use: ElectricityUseDf, demand: DemandDf, product
     test_production_is_used(production.df[production.SolarProduction], electricity_use, epsilon)
     test_all_stored_is_used(electricity_use, num_batteries * params.BATTERY_CAPACITY)
     test_battery_capacity_is_not_passed(electricity_use, num_batteries * params.BATTERY_CAPACITY, epsilon)
+    test_charge_power_not_passed(electricity_use, num_batteries * params.CHARGE_POWER)
     logging.info("Passed all tests")
 
 
@@ -78,7 +79,7 @@ def test_battery_capacity_is_not_passed(electricity_use: ElectricityUseDf, batte
                                         epsilon=0.05) -> None:
     """
     Makes sure the battery capacity is not passed
-    :param electricity_use: ElectricityUseDfpd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage,
+    :param electricity_use: ElectricityUseDf of pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage,
     SolarStored, SolarLost])
     :param battery_capacity: the maximum capacity of the battery
     :param epsilon: small number to account for computational errors
@@ -89,3 +90,15 @@ def test_battery_capacity_is_not_passed(electricity_use: ElectricityUseDf, batte
         simulate_battery += row.SolarStored - row.StoredUsage
         assert -epsilon <= simulate_battery <= battery_capacity + epsilon
     logging.info("passed test_battery_capacity_is_not_passed")
+
+
+def test_charge_power_not_passed(electricity_use: ElectricityUseDf, charge_power: float) -> None:
+    """
+    Makes sure the charge power is not passed
+    :param electricity_use: ElectricityUseDf of pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage,
+    SolarStored, SolarLost])
+    :param charge_power: the maximum charge power of the battery
+    :return:
+    """
+    assert (electricity_use.df[electricity_use.SolarStored] * -1 + charge_power > 0).values.any()
+    logging.info("passed test_charge_power_not_passed")
