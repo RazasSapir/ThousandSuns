@@ -20,7 +20,7 @@ def __get_solar_production_profile(normalised_production: ProductionDf, power_so
 
 
 def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_capacity: float,
-                   power_solar_panels: int, time_span: float = 1) -> float:
+                   power_solar_panels: float, time_span: float = 1) -> float:
     """
     :param params: namedtuple simulation params
     :param time_span: the time of the run
