@@ -65,14 +65,14 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capa
         next_hour[ElectricityUseDf.SolarUsage].append(solar_used)
         needed_power -= solar_used
 
-        solar_stored = min(min(row.SolarProduction - solar_used, battery_capacity - storage), battery_power)
+        solar_stored = min(row.SolarProduction - solar_used, battery_capacity - storage, battery_power)
         next_hour[ElectricityUseDf.SolarStored].append(solar_stored)
         storage += solar_stored
 
         solar_lost = row.SolarProduction - solar_used - solar_stored
         next_hour[ElectricityUseDf.SolarLost].append(solar_lost)
 
-        stored_used = min(min(storage, needed_power), battery_power)
+        stored_used = min(storage, needed_power, battery_power)
         next_hour[ElectricityUseDf.StoredUsage].append(stored_used)
         storage -= stored_used
         needed_power -= stored_used
@@ -95,7 +95,24 @@ def smart_storing_strategy(demand: DemandDf, production: ProductionDf, cost_prof
     :param battery_power: power of the battery
     :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
     """
-    raise NotImplementedError()
+    greedy_usage = greedy_use_strategy(demand, production, battery_capacity, battery_power)
+    needed_to_purchase = []
+    pos = -2
+    storage_space = 0
+    for hour, price in zip(greedy_usage.df.itertuples(), cost_profile.df):
+        needed_to_purchase.append(0)
+        storage_space += hour[ElectricityUseDf.SolarStored] - hour[ElectricityUseDf.StoredUsage]
+        if cost_profile.df['Cost']:
+            needed_to_purchase[pos] += hour[ElectricityUseDf.GasUsage]
+            needed_to_purchase[pos] = min(needed_to_purchase[pos] + hour[ElectricityUseDf.GasUsage], storage_space)
+            pos -= 1
+        else:
+            pos = -2
+
+    for i in greedy_usage.df.index:
+        pass
+
+
 
 
 def first_selling_strategy(demand: DemandDf, production: ProductionDf, cost_profile: CostElectricityDf,
