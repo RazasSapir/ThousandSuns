@@ -95,11 +95,12 @@ def smart_storing_strategy(demand: DemandDf, production: ProductionDf, cost_prof
     :param battery_power: power of the battery
     :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
     """
-    greedy_usage = greedy_use_strategy(demand, production, battery_capacity, battery_power)
+    greedy_usage_df = greedy_use_strategy(demand, production, battery_capacity, battery_power).df
+
     needed_to_purchase = []
     pos = -2
     storage_space = 0
-    for hour, price in zip(greedy_usage.df.itertuples(), cost_profile.df):
+    for hour, price in zip(greedy_usage_df.itertuples(), cost_profile.df):
         needed_to_purchase.append(0)
         storage_space += hour[ElectricityUseDf.SolarStored] - hour[ElectricityUseDf.StoredUsage]
         if cost_profile.df['Cost']:
@@ -109,8 +110,12 @@ def smart_storing_strategy(demand: DemandDf, production: ProductionDf, cost_prof
         else:
             pos = -2
 
-    for i in greedy_usage.df.index:
-        pass
+    for i in range(len(needed_to_purchase), 0, -1):
+        charge_bought = min(battery_power, needed_to_purchase[i])
+        greedy_usage_df[ElectricityUseDf.GasUsage][i] += charge_bought
+        greedy_usage_df[ElectricityUseDf.SolarStored][i] += charge_bought
+        if charge_bought != needed_to_purchase[i]:
+            needed_to_purchase[i-1] = needed_to_purchase[i] - charge_bought
 
 
 
