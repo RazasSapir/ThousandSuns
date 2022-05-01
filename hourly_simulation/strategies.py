@@ -96,3 +96,17 @@ def smart_storing_strategy(demand: DemandDf, production: ProductionDf, cost_prof
     :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
     """
     raise NotImplementedError()
+
+
+def first_selling_strategy(demand: DemandDf, production: ProductionDf, cost_profile: CostElectricityDf,
+                           sell_profile: CostElectricityDf, battery_capacity: float, battery_power: float) -> ElectricityUseDf:
+    """
+        Given a matching rect cost and sell function
+        :param demand: DemandDf: pd.DataFrame(columns=[HourOfYear, 'Demand'])
+        :param production: ProductionDf: pd.DataFrame(columns=[HourOfYear, 'SolarProduction'])
+        :param cost_profile: CostElectricityDf wrapper of pd.DataFrame with Cost and HourOfYear
+        :param sell_profile: CostElectricityDf wrapper of pd.DataFrame with selling price and HourOfYear
+        :param battery_capacity: float capacity of battery
+        :param battery_power: power of the battery
+        :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
+        """
