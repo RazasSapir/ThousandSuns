@@ -1,10 +1,11 @@
-from typing import Callable
-
-from hourly_simulation.parameters import *
-from hourly_simulation.predict_demand import *
-
 
 # todo: add units to parameters
+from typing import Callable
+
+from df_objects import ProductionDf
+from df_objects.df_objects import ElectricityUseDf, DemandDf
+from hourly_simulation.parameters import Params, ELECTRICITY_COST
+from hourly_simulation.predict_demand import predict_demand_in_year
 
 
 def __get_solar_production_profile(normalised_production: ProductionDf, power_solar_panels: float) -> ProductionDf:
@@ -41,6 +42,11 @@ def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_ca
     return total_gas_cost + total_solar_opex + total_solar_capex + total_battery_opex + total_battery_capex
 
 
+def calculate_cost_with_selling(electricity_use: ElectricityUseDf, params: Params, battery_capacity: float,
+                                power_solar_panels: float, time_span: float = 1) -> float:
+    pass
+
+
 def __calculate_pollution(electricity_use: ElectricityUseDf):
     """
     Calculate the total pollution created by the gas in the given year.
@@ -68,6 +74,7 @@ def get_usage_profile(demand: DemandDf, normalised_production: ProductionDf, par
     total_panel_production: ProductionDf = __get_solar_production_profile(normalised_production=normalised_production,
                                                                           power_solar_panels=power_solar_panels)
     electricity_use: ElectricityUseDf = strategy(future_demand, total_panel_production,
+                                                 params,
                                                  params.BATTERY_CAPACITY * num_batteries,
                                                  params.CHARGE_POWER * num_batteries)
     return electricity_use

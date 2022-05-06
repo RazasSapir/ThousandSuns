@@ -1,4 +1,8 @@
-from df_objects.df_objects import *
+import numpy as np
+import pandas as pd
+from numba import jit
+
+from df_objects.df_objects import DemandDf, ProductionDf, ElectricityUseDf, CostElectricityDf
 
 
 def store_first_strategy(demand: DemandDf, production: ProductionDf, battery_capacity: int) -> ElectricityUseDf:
@@ -42,7 +46,7 @@ def store_first_strategy(demand: DemandDf, production: ProductionDf, battery_cap
     return ElectricityUseDf(hourly_use)
 
 
-def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capacity: float,
+def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params, battery_capacity: float,
                         battery_power: float) -> ElectricityUseDf:
     """
     This is the implementation of the better use strategy - using the solar produced whenever possible,
@@ -54,34 +58,60 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, battery_capa
     :param battery_power: power of the battery
     :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
     """
-    storage = 0
-    next_hour = {ElectricityUseDf.GasUsage: [], ElectricityUseDf.SolarUsage: [], ElectricityUseDf.StoredUsage: [],
-                 ElectricityUseDf.SolarStored: [], ElectricityUseDf.SolarLost: []}
-    electricity_data = pd.merge(demand.df, production.df, on=ElectricityUseDf.HourOfYear)
-    for row in electricity_data.itertuples():
-        needed_power = row.Demand
+    len_simulation = len(demand.df[demand.HourOfYear])
+    cols = {ElectricityUseDf.GasUsage: [], ElectricityUseDf.SolarUsage: [], ElectricityUseDf.StoredUsage: [],
+            ElectricityUseDf.SolarStored: [], ElectricityUseDf.SolarLost: []}
+    gas_usage_arr, \
+    solar_usage_arr, \
+    stored_usage_arr, \
+    solar_stored_arr, \
+    solar_lost_arr = method_name(len_simulation,
+                                 battery_capacity,
+                                 battery_power,
+                                 params.BATTERY_EFFICIENCY,
+                                 demand.df[
+                                     demand.Demand].to_numpy(),
+                                 production.df[
+                                     production.SolarProduction].to_numpy())
 
-        solar_used = min(row.SolarProduction, needed_power)
-        next_hour[ElectricityUseDf.SolarUsage].append(solar_used)
+    hourly_use = ElectricityUseDf(pd.DataFrame())
+    hourly_use.df[hourly_use.GasUsage] = gas_usage_arr
+    hourly_use.df[hourly_use.SolarUsage] = solar_usage_arr
+    hourly_use.df[hourly_use.StoredUsage] = stored_usage_arr
+    hourly_use.df[hourly_use.SolarStored] = solar_stored_arr
+    hourly_use.df[hourly_use.SolarLost] = solar_lost_arr
+    hourly_use.df[hourly_use.HourOfYear] = demand.df[ElectricityUseDf.HourOfYear]
+    # no selling in this strategy
+    hourly_use.df[ElectricityUseDf.SolarSold] = 0
+    hourly_use.df[ElectricityUseDf.StoredSold] = 0
+    return hourly_use
+
+
+@jit
+def method_name(len_simulation, battery_capacity, battery_power, battery_efficiency, demand, production):
+    storage: float = 0
+    gas_usage_arr = np.zeros(len_simulation)
+    solar_usage_arr = np.zeros(len_simulation)
+    stored_usage_arr = np.zeros(len_simulation)
+    solar_stored_arr = np.zeros(len_simulation)
+    solar_lost_arr = np.zeros(len_simulation)
+    for i in range(len_simulation):
+        needed_power = demand[i]
+        solar_used = min(production[i], needed_power)
+        solar_usage_arr[i] = solar_used
         needed_power -= solar_used
-
-        solar_stored = min(min(row.SolarProduction - solar_used, battery_capacity - storage), battery_power)
-        next_hour[ElectricityUseDf.SolarStored].append(solar_stored)
+        solar_stored = min(min(production[i] - solar_used, battery_capacity - storage),
+                           battery_power) * battery_efficiency
+        solar_stored_arr[i] = solar_stored
         storage += solar_stored
-
-        solar_lost = row.SolarProduction - solar_used - solar_stored
-        next_hour[ElectricityUseDf.SolarLost].append(solar_lost)
-
+        solar_lost = production[i] - solar_used - solar_stored
+        solar_lost_arr[i] = solar_lost
         stored_used = min(min(storage, needed_power), battery_power)
-        next_hour[ElectricityUseDf.StoredUsage].append(stored_used)
+        stored_usage_arr[i] = stored_used
         storage -= stored_used
         needed_power -= stored_used
-
-        next_hour[ElectricityUseDf.GasUsage].append(needed_power)
-
-    hourly_use = ElectricityUseDf(pd.DataFrame.from_dict(next_hour))
-    hourly_use.df[ElectricityUseDf.HourOfYear] = electricity_data[ElectricityUseDf.HourOfYear]
-    return hourly_use
+        gas_usage_arr[i] = needed_power
+    return gas_usage_arr, solar_usage_arr, stored_usage_arr, solar_stored_arr, solar_lost_arr
 
 
 def smart_storing_strategy(demand: DemandDf, production: ProductionDf, cost_profile: CostElectricityDf,

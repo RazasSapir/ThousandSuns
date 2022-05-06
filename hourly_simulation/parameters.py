@@ -1,4 +1,8 @@
-from hourly_simulation.strategies import *
+import pandas as pd
+from collections import namedtuple
+
+from df_objects.df_objects import CostElectricityDf, ProductionDf
+from hourly_simulation import strategies
 
 # prediction
 __GROWTH_PER_YEAR = 1.028
@@ -7,8 +11,8 @@ __GROWTH_PER_YEAR = 1.028
 __BATTERY_CAPACITY = 4000  # Kwh
 __CHARGE_POWER = 2000  # Kw
 
-# BATTERY_EFFICIENCY = 0.89  # %
 # BATTERY_DEPTH = 0.8  # %
+__BATTERY_EFFICIENCY = 0.87  # %
 __BATTERY_OPEX = 15.6  # ILS / kW / year
 __BATTERY_CAPEX = 1000  # ILS / Kwh
 
@@ -38,10 +42,10 @@ __simulation_params_dict = {
     "BATTERY_OPEX": __BATTERY_OPEX,
     "BATTERY_CAPEX": __BATTERY_CAPEX,
     "SOLAR_OPEX": __SOLAR_OPEX,
-    "SOLAR_CAPEX": __SOLAR_CAPEX
+    "SOLAR_CAPEX": __SOLAR_CAPEX,
+    "BATTERY_EFFICIENCY": __BATTERY_EFFICIENCY
 }
 
-from collections import namedtuple
 
 Params = namedtuple('Params', __simulation_params_dict)
 simulation_params = Params(**__simulation_params_dict)
@@ -49,4 +53,5 @@ simulation_params = Params(**__simulation_params_dict)
 # UI params
 demand_files = {"Hatzor": r'data/consumption_hatzor.csv',
                 "Ramat David": r'data/consumption_ramat_david.csv'}
-use_strategies = {"Greedy Demand": greedy_use_strategy}
+
+use_strategies = {"Greedy Demand": strategies.greedy_use_strategy}

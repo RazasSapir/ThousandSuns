@@ -1,8 +1,10 @@
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from df_objects.df_objects import *
 from typing import Iterator
+
+from df_objects.df_objects import SimulationResults
 
 labels = ['GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored', 'SolarLost']
 colors = {

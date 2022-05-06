@@ -1,13 +1,14 @@
 import logging
-
-from hourly_simulation.parameters import *
+import pandas as pd
+from df_objects.df_objects import ElectricityUseDf, DemandDf, ProductionDf
+from hourly_simulation.parameters import Params
 
 
 def test_simulation(electricity_use: ElectricityUseDf, demand: DemandDf, production: ProductionDf,
                     params: Params, num_batteries: float, epsilon=0.05) -> None:
     """
     Running all the sanity checks
-    :param electricity_use: ElectricityUseDf pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
+    :param electricity_use: ElectricityUseDf pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost, SolarSold, StoredSold]
     :param demand: pd.Series the demand in each hour
     :param production: pd.Series the production in each hour
     :param battery_capacity: the maximum capacity of the battery
@@ -26,7 +27,7 @@ def test_simulation(electricity_use: ElectricityUseDf, demand: DemandDf, product
 def test_non_negative(electricity_use: ElectricityUseDf) -> None:
     """
     Makes sure all the number are non-negative
-    :param electricity_use: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
+    :param electricity_use: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost, SolarSold, StoredSold]
     :return: None
     """
     assert not (electricity_use.df < 0).values.any()
@@ -51,13 +52,15 @@ def test_production_is_used(production: pd.Series, electricity_use: ElectricityU
     """
     Makes sure all the production is accounted for
     :param production: pd.Series the production in each hour
-    :param electricity_use: ElectricityUseDf pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
+    :param electricity_use: ElectricityUseDf pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost, SolarSold, StoredSold]
     :param epsilon: small number to account for computational errors
     :return: None
     """
     should_be_production = electricity_use.df[electricity_use.SolarUsage] + \
                            electricity_use.df[electricity_use.SolarStored] + \
-                           electricity_use.df[electricity_use.SolarLost]
+                           electricity_use.df[electricity_use.SolarLost] + \
+                           electricity_use.df[electricity_use.SolarSold]
+
     assert (should_be_production - production < epsilon).values.any()
     logging.info("passed test_production_is_used")
 
@@ -71,7 +74,8 @@ def test_all_stored_is_used(electricity_use: ElectricityUseDf, battery_capacity:
     :return: None
     """
     assert abs(electricity_use.df[electricity_use.SolarStored].sum() -
-               electricity_use.df[electricity_use.StoredUsage].sum()) <= battery_capacity
+               electricity_use.df[electricity_use.StoredUsage].sum() -
+               electricity_use.df[electricity_use.StoredSold].sum()) <= battery_capacity
     logging.info("passed test_all_stored_is_used")
 
 
@@ -87,7 +91,7 @@ def test_battery_capacity_is_not_passed(electricity_use: ElectricityUseDf, batte
     """
     simulate_battery = 0
     for row in electricity_use.df.itertuples():
-        simulate_battery += row.SolarStored - row.StoredUsage
+        simulate_battery += row.SolarStored - row.StoredUsage - row.StoredSold
         assert -epsilon <= simulate_battery <= battery_capacity + epsilon
     logging.info("passed test_battery_capacity_is_not_passed")
 
@@ -100,5 +104,7 @@ def test_charge_power_not_passed(electricity_use: ElectricityUseDf, charge_power
     :param charge_power: the maximum charge power of the battery
     :return:
     """
-    assert (electricity_use.df[electricity_use.SolarStored] * -1 + charge_power > 0).values.any()
+    assert (charge_power -
+            electricity_use.df[electricity_use.SolarStored] -
+            electricity_use.df[electricity_use.StoredSold] > 0).values.any()
     logging.info("passed test_charge_power_not_passed")

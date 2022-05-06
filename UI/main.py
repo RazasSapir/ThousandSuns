@@ -1,9 +1,13 @@
 import dash_bootstrap_components as dbc
+import pandas as pd
 from dash import Dash, dcc, html, Input, Output, State
 from dash.exceptions import PreventUpdate
 
-from hourly_simulation.simulation import *
-from output_graphs.hourly_graph_creator import *
+from df_objects.df_objects import DemandDf, ProductionDf
+from hourly_simulation.parameters import demand_files, simulation_params, use_strategies, NORMALISED_SOLAR_PRODUCTION, \
+    Params
+from hourly_simulation.simulation import get_usage_profile
+from output_graphs import hourly_graph_creator, yearly_graph_fig
 
 app = Dash(external_stylesheets=[dbc.themes.JOURNAL])
 is_params_hidden = True
@@ -95,4 +99,4 @@ def show_params(n_clicks):
 
 
 def main():
-    app.run_server(host="0.0.0.0", debug=True)
+    app.run_server(host="127.0.0.1", debug=True)

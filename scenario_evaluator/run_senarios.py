@@ -1,12 +1,12 @@
 import logging
-from typing import Iterator, Tuple
-
 import pandas as pd
-
-from hourly_simulation.parameters import *
-from hourly_simulation.simulation import simulate_use
-from hourly_simulation import strategies
+from typing import Iterator, Tuple, Callable
 from tqdm import tqdm
+
+from df_objects.df_objects import DemandDf, ProductionDf, SimulationResults
+from hourly_simulation import strategies
+from hourly_simulation.parameters import Params
+from hourly_simulation.simulation import simulate_use
 
 
 def check_reached_edges_of_iterator(solar_panel_power_it: Iterator, num_batteries_it: Iterator,
@@ -30,7 +30,7 @@ def check_reached_edges_of_iterator(solar_panel_power_it: Iterator, num_batterie
 
 
 def run_scenarios(demand: DemandDf, single_panel_production: ProductionDf, simulated_year: int,
-                  solar_panel_power_it: Iterator, num_batteries_it: Iterator, params: Params) -> \
+                  solar_panel_power_it: Iterator, num_batteries_it: Iterator, strategy: Callable, params: Params, time_span=25) -> \
         Tuple[SimulationResults, pd.DataFrame]:
     """
     Run the simulation of various solar panel and battery combinations
@@ -54,9 +54,9 @@ def run_scenarios(demand: DemandDf, single_panel_production: ProductionDf, simul
                              params=params,
                              power_solar_panels=power_solar_panels,
                              num_batteries=num_batteries,
-                             strategy=strategies.greedy_use_strategy,
+                             strategy=strategy,
                              simulated_year=simulated_year,
-                             time_span=25))
+                             time_span=time_span))
 
     df_results = SimulationResults(pd.DataFrame.from_dict(simulation_results))
     optimal_scenario = df_results.df.loc[df_results.df[df_results.Cost].idxmin()]

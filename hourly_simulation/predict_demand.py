@@ -1,4 +1,4 @@
-from df_objects.df_objects import *
+from df_objects.df_objects import DemandDf
 from hourly_simulation.parameters import Params
 
 
