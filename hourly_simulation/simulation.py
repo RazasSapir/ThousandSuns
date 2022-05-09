@@ -1,10 +1,9 @@
-
 # todo: add units to parameters
 from typing import Callable
 
 from df_objects import ProductionDf
 from df_objects.df_objects import ElectricityUseDf, DemandDf
-from hourly_simulation.parameters import Params, ELECTRICITY_COST
+from hourly_simulation.parameters import Params, ELECTRICITY_COST, ELECTRICITY_SELLING_INCOME
 from hourly_simulation.predict_demand import predict_demand_in_year
 
 
@@ -34,12 +33,18 @@ def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_ca
     hours_paid_in_year = ELECTRICITY_COST.df[ELECTRICITY_COST.HourOfYear] == electricity_use.df[
         electricity_use.HourOfYear]
     gas_cost_per_hour = ELECTRICITY_COST.df.loc[hours_paid_in_year, ELECTRICITY_COST.Cost]
+    selling_income_per_hour = ELECTRICITY_SELLING_INCOME.df.loc[hours_paid_in_year, ELECTRICITY_COST.Cost]
     total_gas_cost = electricity_use.df[electricity_use.GasUsage].to_numpy().dot(gas_cost_per_hour.to_numpy())
+    immediate_selling_income = electricity_use.df[electricity_use.SolarSold].to_numpy().dot(
+        selling_income_per_hour.to_numpy())
+    battery_selling_income = electricity_use.df[electricity_use.StoredSold].to_numpy().dot(
+        selling_income_per_hour.to_numpy())
+    total_selling_income = immediate_selling_income + battery_selling_income
     total_solar_opex = power_solar_panels * params.SOLAR_OPEX
     total_solar_capex = power_solar_panels * params.SOLAR_CAPEX / time_span
     total_battery_opex = battery_capacity * params.BATTERY_OPEX
     total_battery_capex = battery_capacity * params.BATTERY_CAPEX / time_span
-    return total_gas_cost + total_solar_opex + total_solar_capex + total_battery_opex + total_battery_capex
+    return total_gas_cost + total_solar_opex + total_solar_capex + total_battery_opex + total_battery_capex - total_selling_income
 
 
 def calculate_cost_with_selling(electricity_use: ElectricityUseDf, params: Params, battery_capacity: float,
