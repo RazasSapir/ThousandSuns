@@ -94,8 +94,8 @@ def simulation_graph(simulation_results: SimulationResults, solar_panel_power_it
         go.Surface(x=num_batteries_it, y=solar_panel_power_it, z=z, opacity=.8, colorscale='Electric',
                    contours=dict(z=dict(show=True)))],
         rows=[1, 1], cols=[1, 2])
-    fig.update_xaxes(title_text="N batteries", row=1, col=1)
-    fig.update_yaxes(title_text="Max solar panel power kw", row=1, col=1)
+    fig.update_xaxes(title_text="number of batteries", row=1, col=1)
+    fig.update_yaxes(title_text="Max solar panel power [kw]", row=1, col=1)
     return fig
 
 
