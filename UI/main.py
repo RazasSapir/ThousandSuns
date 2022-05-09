@@ -4,8 +4,8 @@ from dash import Dash, dcc, html, Input, Output, State
 from dash.exceptions import PreventUpdate
 
 from df_objects.df_objects import DemandDf, ProductionDf
-from hourly_simulation.parameters import demand_files, simulation_params, use_strategies, NORMALISED_SOLAR_PRODUCTION, \
-    Params
+from hourly_simulation.parameters import simulation_params, NORMALISED_SOLAR_PRODUCTION, Params
+from UI.UI_params  import demand_files, use_strategies
 from hourly_simulation.simulation import get_usage_profile
 from output_graphs import hourly_graph_creator, yearly_graph_fig
 
