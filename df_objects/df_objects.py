@@ -30,6 +30,14 @@ class ElectricityUseDf(InputDataFrameWrapper):
     SolarLost = 'SolarLost'
     SolarSold = 'SolarSold'
     StoredSold = 'StoredSold'
+    COLUMNS = [InputDataFrameWrapper.HourOfYear,
+               GasUsage,
+               SolarUsage,
+               StoredUsage,
+               SolarStored,
+               SolarLost,
+               SolarSold,
+               StoredSold]
 
     def __init__(self, df: pd.DataFrame):
         InputDataFrameWrapper.__init__(self, df)
