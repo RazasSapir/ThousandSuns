@@ -6,14 +6,22 @@ from typing import Iterator
 
 from df_objects.df_objects import SimulationResults
 
-labels = ['GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored', 'SolarLost']
+labels = ['GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored',
+          'SolarLost']
 colors = {
     'GasUsage': '#999999',
     'SolarUsage': '#00FF00',
     'StoredUsage': '#00bcd4',
     'SolarStored': '#FFC300',
-    'SolarLost': '#2f2f2f'
+    'SolarLost': '#2f2f2f',
+    'StoredState': '#bc00d4'
 }
+
+OPACITY = 0.85
+HOVERINFO = 'x+y'
+MODE = 'lines'
+WIDTH = 0.5
+STACKGROUP = 'one'
 
 
 # todo: remove strings with constants
@@ -24,26 +32,25 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
     x = [i for i in range(len(yearly_stats.index) + 1)]
     yearly_stats = yearly_stats.groupby(yearly_stats.index // num_hours_to_sum).sum()
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x, y=yearly_stats['GasUsage'], name='GasUsage', marker_color=colors['GasUsage'],
-                             opacity=0.85, hoverinfo='x+y', mode='lines',
-                             line=dict(width=0.5, color=colors['GasUsage']),
-                             stackgroup='one'))
-    fig.add_trace(go.Scatter(x=x, y=yearly_stats['SolarUsage'], name='SolarUsage', marker_color=colors['SolarUsage'],
-                             opacity=0.85, hoverinfo='x+y', mode='lines',
-                             line=dict(width=0.5, color=colors['SolarUsage']),
-                             stackgroup='one'))
-    fig.add_trace(go.Scatter(x=x, y=yearly_stats['StoredUsage'], name='StoredUsage', marker_color=colors['StoredUsage'],
-                             opacity=0.85, hoverinfo='x+y', mode='lines',
-                             line=dict(width=0.5, color=colors['StoredUsage']),
-                             stackgroup='one'))
-    fig.add_trace(go.Scatter(x=x, y=yearly_stats['SolarStored'], name='SolarStored', marker_color=colors['SolarStored'],
-                             opacity=0.85, hoverinfo='x+y', mode='lines',
-                             line=dict(width=0.5, color=colors['SolarStored']),
-                             stackgroup='one'))
-    fig.add_trace(go.Scatter(x=x, y=yearly_stats['SolarLost'], name='SolarLost', marker_color=colors['SolarLost'],
-                             opacity=0.85, hoverinfo='x+y', mode='lines',
-                             line=dict(width=0.5, color=colors['SolarLost']),
-                             stackgroup='one'))
+
+    for label in labels:
+        fig.add_trace(
+            go.Scatter(x=x, y=yearly_stats[label], name=label,
+                       marker_color=colors[label],
+                       opacity=OPACITY, hoverinfo=HOVERINFO, mode=MODE,
+                       line=dict(width=WIDTH, color=colors[label]),
+                       stackgroup=STACKGROUP))
+
+    stored_state_stats = [yearly_stats['SolarStored'][i]-yearly_stats[
+        'StoredUsage'][i] for i in range(len(yearly_stats.index))]
+
+    fig.add_trace(
+        go.Scatter(x=x, y=stored_state_stats, name='StoredState',
+                   marker_color=colors['StoredState'],
+                   opacity=OPACITY, hoverinfo=HOVERINFO, mode=MODE,
+                   line=dict(width=WIDTH, color=colors['StoredState']),
+                   stackgroup=STACKGROUP))
+
     fig.update_layout(barmode='stack'
                       , title='Day Usage'
                       , xaxis_title='Day In Year'
