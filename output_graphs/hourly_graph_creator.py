@@ -40,9 +40,11 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
                        opacity=OPACITY, hoverinfo=HOVERINFO, mode=MODE,
                        line=dict(width=WIDTH, color=colors[label]),
                        stackgroup=STACKGROUP))
-
-    stored_state_stats = [yearly_stats['SolarStored'][i]-yearly_stats[
-        'StoredUsage'][i] for i in range(len(yearly_stats.index))]
+    stored_state_stats = [yearly_stats['SolarStored'][0]-
+                          yearly_stats['StoredUsage'][0]]
+    for i in range(1, len(yearly_stats.index)):
+        difference = yearly_stats['SolarStored'][i]-yearly_stats['StoredUsage'][i]
+        stored_state_stats += [stored_state_stats[i-1] + difference]
 
     fig.add_trace(
         go.Scatter(x=x, y=stored_state_stats, name='StoredState',
