@@ -15,7 +15,19 @@ SOLAR_LOST = 'SolarLost'
 STORED_STATE = 'StoredState'
 USAGE_SUM = 'UsageSum'
 
-labels = [GAS_USAGE, SOLAR_USAGE, STORED_USAGE, SOLAR_STORED, SOLAR_LOST]
+yearly_stats_labels = [GAS_USAGE, SOLAR_USAGE, STORED_USAGE,
+                       SOLAR_STORED, SOLAR_LOST]
+
+names = {
+    GAS_USAGE: 'Gas Based Electricity Consumption',
+    SOLAR_USAGE: 'Solar Energy Consumption',
+    STORED_USAGE: 'Stored Solar Energy Consumption',
+    SOLAR_STORED: 'Stored Solar Energy',
+    SOLAR_LOST: 'Lost Solar Energy',
+    STORED_STATE: 'Batteries Charge',
+    USAGE_SUM: 'Total Energy Consumption'
+}
+
 colors = {
     GAS_USAGE: '#999999',
     SOLAR_USAGE: '#00FF00',
@@ -23,16 +35,20 @@ colors = {
     SOLAR_STORED: '#FFC300',
     SOLAR_LOST: '#2f2f2f',
     STORED_STATE: '#bc00d4',
-    USAGE_SUM: '#3b3bb3'
+    USAGE_SUM: '#b33b3b'
 }
 
 OPACITY = 0.85
 HOVERINFO = 'x+y'
 LINES = 'lines'
 WIDTH = 0.5
+THICK_WIDTH = 3
 STACKGROUP_ONE = 'one'
 STACKGROUP_TWO = 'two'
 STACKGROUP_THREE = 'three'
+DASH = 'dash'
+
+HOURS_IN_DAY = 24
 
 
 # todo: remove strings with constants
@@ -40,7 +56,8 @@ STACKGROUP_THREE = 'three'
 # todo: add demand line as sum of all usage values
 # todo: add docstring
 def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
-    x = [i for i in range(1, len(yearly_stats.index) + 1)]
+    x = [f"{(i//HOURS_IN_DAY) + 1} ({i%HOURS_IN_DAY + 1})"
+         for i in range(len(yearly_stats.index))]
     yearly_stats = yearly_stats.groupby(yearly_stats.index // num_hours_to_sum).sum()
     usage_sum = [solar + gas + stored for (solar, gas, stored) in zip(
         yearly_stats[SOLAR_USAGE], yearly_stats[GAS_USAGE], yearly_stats[
@@ -48,18 +65,17 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
     fig = go.Figure()
 
     labeled_scatters = []
-    for label in labels:
+    for label in yearly_stats_labels:
         labeled_scatters.append(
-            go.Scatter(x=x, y=yearly_stats[label], name=label,
+            go.Scatter(x=x, y=yearly_stats[label], name=names[label],
                        marker_color=colors[label],
                        opacity=OPACITY, hoverinfo=HOVERINFO, mode=LINES,
                        line=dict(width=WIDTH, color=colors[label]),
                        stackgroup=STACKGROUP_ONE)
         )
-
         battery_state_scatter = go.Scatter(
             x=x, y=stored_state_stats(yearly_stats),
-            name=STORED_STATE,
+            name=names[STORED_STATE],
             marker_color=colors[STORED_STATE],
             opacity=OPACITY,
             hoverinfo=HOVERINFO,
@@ -69,19 +85,19 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
 
         usage_sum_scatter = go.Scatter(
             x=x, y=usage_sum,
-            name=USAGE_SUM,
+            name=names[USAGE_SUM],
             marker_color=colors[USAGE_SUM],
             opacity=OPACITY, hoverinfo=HOVERINFO, mode=LINES,
-            line=dict(width=WIDTH, color=colors[USAGE_SUM]),
-            stackgroup=STACKGROUP_THREE)
+            line=dict(width=THICK_WIDTH, color=colors[USAGE_SUM], dash=DASH)
+        )
 
-    fig.add_traces(labeled_scatters +
-                   [battery_state_scatter, usage_sum_scatter])
+    fig.add_traces([battery_state_scatter, usage_sum_scatter]
+                   + labeled_scatters)
 
     fig.update_layout(barmode='stack'
                       , title='Day Usage'
                       , xaxis_title='Day In Year'
-                      , yaxis_title='Usage (kWh)')
+                      , yaxis_title='kWh')
     return fig
 
 
