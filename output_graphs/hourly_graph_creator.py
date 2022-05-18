@@ -100,6 +100,10 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num, batteries_cap,
     fig.add_trace(battery_state_scatter, row=1, col=1)
     fig.add_traces(labeled_scatters + [usage_sum_scatter], rows=2, cols=1)
     fig.update_xaxes(matches='x')
+    fig.update_xaxes(title_text="Day(hour)", row=2, col=1)
+    fig.update_yaxes(title_text="percentage %", row=1, col=1)
+    fig.update_yaxes(title_text="kWh", row=2, col=1)
+
     fig.update_layout(barmode='stack'
                       , title='Day Usage'
                       , xaxis_title='Day In Year'
@@ -108,8 +112,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num, batteries_cap,
 
 
 def normalize_battery(num, batteries_num, batteries_cap):
-    print(batteries_num*batteries_cap)
-    return (100*num)/(batteries_num*batteries_cap)
+        return (100*num)/(batteries_num*batteries_cap)
 
 
 def stored_state_stats(yearly_stats, batteries_num, batteries_cap):
