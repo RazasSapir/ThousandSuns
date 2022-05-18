@@ -68,7 +68,8 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num, batteries_cap,
         yearly_stats[STORED_USAGE])]
 
     fig = make_subplots(rows=2, cols=1,
-                        shared_xaxes=True, row_heights=[0.4, 0.6])
+                        shared_xaxes=True, row_heights=[0.4, 0.6],
+                        vertical_spacing=0.01)
 
     labeled_scatters = []
     for label in yearly_stats_labels:
