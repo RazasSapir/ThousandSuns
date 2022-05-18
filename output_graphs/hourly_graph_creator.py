@@ -55,14 +55,20 @@ HOURS_IN_DAY = 24
 # todo: add battery level line
 # todo: add demand line as sum of all usage values
 # todo: add docstring
-def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
+def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num, batteries_cap,
+                     num_hours_to_sum=1):
     x = [f"{(i//HOURS_IN_DAY) + 1} ({i%HOURS_IN_DAY + 1})"
          for i in range(len(yearly_stats.index))]
+
     yearly_stats = yearly_stats.groupby(yearly_stats.index // num_hours_to_sum).sum()
+
     usage_sum = [solar + gas + stored for (solar, gas, stored) in zip(
-        yearly_stats[SOLAR_USAGE], yearly_stats[GAS_USAGE], yearly_stats[
-            STORED_USAGE])]
-    fig = go.Figure()
+        yearly_stats[SOLAR_USAGE],
+        yearly_stats[GAS_USAGE],
+        yearly_stats[STORED_USAGE])]
+
+    fig = make_subplots(rows=2, cols=1,
+                        shared_xaxes=True, row_heights=[0.4, 0.6])
 
     labeled_scatters = []
     for label in yearly_stats_labels:
@@ -74,7 +80,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
                        stackgroup=STACKGROUP_ONE)
         )
         battery_state_scatter = go.Scatter(
-            x=x, y=stored_state_stats(yearly_stats),
+            x=x, y=stored_state_stats(yearly_stats, batteries_num, batteries_cap),
             name=names[STORED_STATE],
             marker_color=colors[STORED_STATE],
             opacity=OPACITY,
@@ -91,9 +97,9 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
             line=dict(width=THICK_WIDTH, color=colors[USAGE_SUM], dash=DASH)
         )
 
-    fig.add_traces([battery_state_scatter, usage_sum_scatter]
-                   + labeled_scatters)
-
+    fig.add_trace(battery_state_scatter, row=1, col=1)
+    fig.add_traces(labeled_scatters + [usage_sum_scatter], rows=2, cols=1)
+    fig.update_xaxes(matches='x')
     fig.update_layout(barmode='stack'
                       , title='Day Usage'
                       , xaxis_title='Day In Year'
@@ -101,19 +107,29 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
     return fig
 
 
-def stored_state_stats(yearly_stats):
+def normalize_battery(num, batteries_num, batteries_cap):
+    print(batteries_num*batteries_cap)
+    return (100*num)/(batteries_num*batteries_cap)
+
+
+def stored_state_stats(yearly_stats, batteries_num, batteries_cap):
     stored_state = [yearly_stats['SolarStored'][0] -
                     yearly_stats['StoredUsage'][0]]
     for i in range(1, len(yearly_stats.index)):
         difference = yearly_stats['SolarStored'][i] - \
                      yearly_stats['StoredUsage'][i]
+        difference = normalize_battery(difference,
+                                       batteries_num,
+                                       batteries_cap)
         stored_state.append(stored_state[i - 1] + difference)
 
     return stored_state
 
 
-def yearly_graph(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
-    yearly_graph_fig(yearly_stats, num_hours_to_sum).show()
+def yearly_graph(yearly_stats: pd.DataFrame, batteries_num,
+                 batteries_cap, num_hours_to_sum=1):
+    yearly_graph_fig(yearly_stats, batteries_num,
+                     batteries_cap, num_hours_to_sum).show()
 
 
 def daily_graph(daily_stats: pd.DataFrame):
