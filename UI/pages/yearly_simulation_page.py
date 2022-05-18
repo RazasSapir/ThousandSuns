@@ -16,7 +16,7 @@ from output_graphs import yearly_graph_fig
 def get_layout():
     return html.Div([
         html.Div([
-            html.H1("Yearly Simulation"),
+            html.H1("Annual Simulation"),
             html.Table([
                 html.Tr([
                     html.Td("Place to Simulate: "),
@@ -41,6 +41,7 @@ def get_layout():
         dcc.Loading(
             id="loading",
             type="default",
+            color="#eb6864",
             children=[dcc.Graph(id='yearly_graph')],
         ),
     ])

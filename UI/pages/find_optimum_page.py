@@ -23,24 +23,46 @@ def get_layout():
             html.H1("Find Optimum"),
             html.Table([
                 html.Tr([
-                    html.Td("Place to Simulate: "),
-                    html.Td(dcc.Dropdown(demand_files, id='place_to_research'))]),
-                html.Tr([
-                    html.Td("Year to simulate: "),
-                    html.Td(dbc.Input(id='year_to_simulate', value='2020', type='number'))]),
-                html.Tr([
-                    html.Td("Use Strategy: "),
-                    html.Td(dcc.Dropdown(list(use_strategies.keys()), id='use_strategy'))]),
-                html.Tr([
-                    html.Td("Batteries Range (start, stop, num):"),
-                    html.Td(dbc.Input(id='number_batteries_range', value='3,4,10', type='text')),
-                ]),
-                html.Tr([
-                    html.Td("Solar panel max KW Range (start, stop, num):"),
-                    html.Td(dbc.Input(id='solar_panel_power_kw_range', value='6000,8000,10', type='text'))]),
-                html.Tr([
-                    html.Td(dbc.Button(id='run_simulation_button', children='Run Simulation', n_clicks=0))]),
+                    html.Td(html.Table([
+                        html.Tr([
+                            html.Td("Place to Simulate: "),
+                            html.Td(dcc.Dropdown(demand_files, id='place_to_research'))]),
+                        html.Tr([
+                            html.Td("Year to simulate: "),
+                            html.Td(dbc.Input(id='year_to_simulate', value='2020', type='number'))]),
+                        html.Tr([
+                            html.Td("Use Strategy: "),
+                            html.Td(dcc.Dropdown(list(use_strategies.keys()), id='use_strategy'))])])),
+                    html.Td(html.Table([
+                        html.Tr([
+                            html.Td("Batteries Range:"), ]),
+                        html.Tr([
+                            html.Td("From:"),
+                            html.Td(dbc.Input(id='number_batteries_min_range', value='3', type='number'))]),
+                        html.Tr([
+                            html.Td("To:"),
+                            html.Td(dbc.Input(id='number_batteries_range_max_range', value='4', type='number'))]),
+                        html.Tr([
+                            html.Td("Points:"),
+                            html.Td(dbc.Input(id='number_batteries_num_range', value='10', type='number')),
+                        ])])),
+                    html.Td(html.Table([
+                        html.Tr([
+                            html.Td("Solar panel max KW Range:"), ]),
+                        html.Tr([
+                            html.Td("From:"),
+                            html.Td(dbc.Input(id='solar_panel_power_kw_min_range', value='6000', type='number'))]),
+                        html.Tr([
+                            html.Td("To:"),
+                            html.Td(dbc.Input(id='solar_panel_power_kw_max_range', value='8000', type='number'))]),
+                        html.Tr([
+                            html.Td("Points:"),
+                            html.Td(dbc.Input(id='solar_panel_power_kw_range', value='10', type='number')),
+                        ]),
+                    ])),
+                ])
             ]),
+            dbc.Button(id='run_simulation_button', children='Run Simulation', n_clicks=0),
             html.H2("Input Error", id="input_error", style=dont_show_error)
         ]),
         html.Br(),
@@ -58,7 +80,7 @@ def get_layout():
     [Input("clock", "n_intervals")])
 def progress_bar_update(n):
     global progress_bar
-    progress = int(np.ceil(progress_bar[-1] * 100))
+    progress = int(progress_bar[-1] * 100)
     return (progress, f"{progress} %" if progress >= 5 else "",)
 
 
@@ -76,10 +98,10 @@ def progress_bar_update(n):
 )
 def run_optimal_simulation(n_clicks, num_batteries_range, solar_panel_power_kw_range, simulated_year, chosen_strategy,
                            place_to_research):
-    if n_clicks == 0:
-        raise PreventUpdate()
     global progress_bar
     progress_bar = [0]
+    if n_clicks == 0:
+        raise PreventUpdate()
     try:
         solar_panel_power_kw_range = [float(num.strip()) for num in str(solar_panel_power_kw_range).split(',')]
         solar_panel_power_it = np.linspace(solar_panel_power_kw_range[0], solar_panel_power_kw_range[1],

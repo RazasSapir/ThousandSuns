@@ -62,7 +62,6 @@ def run_scenarios(demand: DemandDf, single_panel_production: ProductionDf, simul
     total_simulations = sum(1 for _ in solar_panel_power_it) * sum(1 for _ in num_batteries_it)
     for power_solar_panels in tqdm(solar_panel_power_it):
         for num_batteries in num_batteries_it:
-            progress_bar.append(counter / total_simulations)
             simulation_results[SimulationResults.PowerSolar].append(power_solar_panels)
             simulation_results[SimulationResults.NumBatteries].append(num_batteries)
             simulation_results[SimulationResults.Cost].append(
@@ -75,6 +74,7 @@ def run_scenarios(demand: DemandDf, single_panel_production: ProductionDf, simul
                              simulated_year=simulated_year,
                              time_span=time_span))
             counter += 1
+            progress_bar.append(counter / total_simulations)
     df_results = SimulationResults(pd.DataFrame.from_dict(simulation_results))
     optimal_scenario = df_results.df.loc[df_results.df[df_results.Cost].idxmin()]
     in_bounds = check_reached_edges_of_iterator(solar_panel_power_it=solar_panel_power_it,
