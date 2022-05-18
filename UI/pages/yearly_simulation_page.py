@@ -10,6 +10,7 @@ from df_objects.df_objects import DemandDf, ProductionDf
 from hourly_simulation.parameters import NORMALISED_SOLAR_PRODUCTION, Params, \
     get_simulation_parameters, PARAMS_PATH
 from hourly_simulation.simulation import get_usage_profile
+from hourly_simulation.strategies import use_strategies
 from output_graphs import yearly_graph_fig
 
 
