@@ -1,20 +1,9 @@
+import csv
 from collections import namedtuple
 
 import pandas as pd
 
 from df_objects.df_objects import CostElectricityDf, ProductionDf
-
-# prediction
-__GROWTH_PER_YEAR = 1.028
-
-# Batteries
-__BATTERY_CAPACITY = 4000  # Kwh
-__CHARGE_POWER = 2000  # Kw
-
-# BATTERY_DEPTH = 0.8  # %
-__BATTERY_EFFICIENCY = 0.87  # %
-__BATTERY_OPEX = 15.6  # ILS / kW / year
-__BATTERY_CAPEX = 1000  # ILS / Kwh
 
 # Electricity
 ELECTRICITY_COST_PATH = 'data/electricity_cost.csv'
@@ -29,26 +18,19 @@ NORMALISED_SOLAR_PRODUCTION = ProductionDf(NATIONAL_SOLAR_PRODUCTION.df.copy())
 NORMALISED_SOLAR_PRODUCTION.df[NORMALISED_SOLAR_PRODUCTION.SolarProduction] /= \
     NATIONAL_SOLAR_PRODUCTION.df[NATIONAL_SOLAR_PRODUCTION.SolarProduction].max()
 
-__SOLAR_OPEX = 70  # ILS / kW / year
-__SOLAR_CAPEX = 2600  # ILS / Kw
-
-# future constants
-__MAXIMUM_SELLING_KWH = 1
-__BATTERY_LIFETIME = 0
-__SOLAR_LIFETIME = 0
-
-__simulation_params_dict = {
-    "GROWTH_PER_YEAR": __GROWTH_PER_YEAR,
-    "BATTERY_CAPACITY": __BATTERY_CAPACITY,
-    "CHARGE_POWER": __CHARGE_POWER,
-    "BATTERY_OPEX": __BATTERY_OPEX,
-    "BATTERY_CAPEX": __BATTERY_CAPEX,
-    "SOLAR_OPEX": __SOLAR_OPEX,
-    "SOLAR_CAPEX": __SOLAR_CAPEX,
-    "BATTERY_EFFICIENCY": __BATTERY_EFFICIENCY
-}
+# Non changing Params
+PARAMS_PATH = "hourly_simulation/parameters.csv"
 
 
+def get_simaltion_paramaters(csv_path):
+    params = {}
+    with open(PARAMS_PATH, newline='\n') as csvfile:
+        reader = csv.reader(csvfile, delimiter=',')
+        for row in reader:
+            params[row[0]] = float(row[1])
+    return params
+
+
+__simulation_params_dict = get_simaltion_paramaters(PARAMS_PATH)
 Params = namedtuple('Params', __simulation_params_dict)
 simulation_params = Params(**__simulation_params_dict)
-

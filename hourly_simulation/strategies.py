@@ -173,7 +173,8 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, binary_co
         # iterate expensive hours and use all the production for the demand
         expensive_hours = [i for i, x in enumerate(bin_cost[day_index * 24, (day_index + 1) * 24]) if x == 1]
         if not len(expensive_hours) == 0:
-            is_buying_profitable = get_is_buying_profitable(battery_efficiency, binary_cost_profile, cost_profile, sell_profile)
+            is_buying_profitable = get_is_buying_profitable(battery_efficiency, binary_cost_profile, cost_profile,
+                                                            sell_profile)
             for hour_index in expensive_hours:
                 i = get_index(day_index, hour_index)
                 needed_power = demand[i]
@@ -211,5 +212,3 @@ def get_is_buying_profitable(battery_efficiency, binary_cost_profile, cost_profi
     low_buy_price = cost_profile.df[cost_profile.Cost].loc[low_index]
     peak_sell_price = sell_profile.df[sell_profile.Cost].loc[peak_index]
     return low_buy_price * battery_efficiency < peak_sell_price
-
-
