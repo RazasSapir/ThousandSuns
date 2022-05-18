@@ -4,7 +4,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from typing import Iterator
 
-from df_objects.df_objects import SimulationResults
+from df_objects.df_objects import SimulationResults, DemandDf
 
 GAS_USAGE = 'GasUsage'
 SOLAR_USAGE = 'SolarUsage'
@@ -55,20 +55,21 @@ HOURS_IN_DAY = 24
 # todo: add battery level line
 # todo: add demand line as sum of all usage values
 # todo: add docstring
-def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num, batteries_cap,
+def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
+                     batteries_cap, demand: DemandDf,
                      num_hours_to_sum=1):
     x = [f"{(i//HOURS_IN_DAY) + 1} ({i%HOURS_IN_DAY + 1})"
          for i in range(len(yearly_stats.index))]
 
     yearly_stats = yearly_stats.groupby(yearly_stats.index // num_hours_to_sum).sum()
 
-    usage_sum = [solar + gas + stored for (solar, gas, stored) in zip(
-        yearly_stats[SOLAR_USAGE],
-        yearly_stats[GAS_USAGE],
-        yearly_stats[STORED_USAGE])]
+    # usage_sum = [solar + gas + stored for (solar, gas, stored) in zip(
+    #     yearly_stats[SOLAR_USAGE],
+    #     yearly_stats[GAS_USAGE],
+    #     yearly_stats[STORED_USAGE])]
 
     fig = make_subplots(rows=2, cols=1,
-                        shared_xaxes=True, row_heights=[0.4, 0.6],
+                        shared_xaxes=True, row_heights=[0.2, 0.8],
                         vertical_spacing=0.01)
 
     labeled_scatters = []
@@ -91,7 +92,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num, batteries_cap,
             stackgroup=STACKGROUP_TWO)
 
         usage_sum_scatter = go.Scatter(
-            x=x, y=usage_sum,
+            x=x, y=demand.df[demand.Demand],
             name=names[USAGE_SUM],
             marker_color=colors[USAGE_SUM],
             opacity=OPACITY, hoverinfo=HOVERINFO, mode=LINES,
@@ -105,12 +106,12 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num, batteries_cap,
     fig.update_yaxes(title_text="percentage %", row=1, col=1)
     fig.update_yaxes(title_text="kWh", row=2, col=1)
 
-    fig.update_layout(barmode='stack', title='Day Usage')
+    fig.update_layout(barmode='stack', title='Day Usage', height=670)
     return fig
 
 
 def normalize_battery(num, batteries_num, batteries_cap):
-        return (100*num)/(batteries_num*batteries_cap)
+    return (100*num)/(batteries_num*batteries_cap)
 
 
 def stored_state_stats(yearly_stats, batteries_num, batteries_cap):
