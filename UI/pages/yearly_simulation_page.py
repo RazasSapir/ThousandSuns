@@ -41,7 +41,7 @@ def get_layout():
         dcc.Loading(
             id="loading",
             type="default",
-            children=[dcc.Graph(id='yearly_graph')]
+            children=[dcc.Graph(id='yearly_graph')],
         ),
     ])
 
