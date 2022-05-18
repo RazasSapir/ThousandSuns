@@ -6,22 +6,33 @@ from typing import Iterator
 
 from df_objects.df_objects import SimulationResults
 
-labels = ['GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored',
-          'SolarLost']
+GAS_USAGE = 'GasUsage'
+SOLAR_USAGE = 'SolarUsage'
+STORED_USAGE = 'StoredUsage'
+SOLAR_STORED = 'SolarStored'
+SOLAR_LOST = 'SolarLost'
+
+STORED_STATE = 'StoredState'
+USAGE_SUM = 'UsageSum'
+
+labels = [GAS_USAGE, SOLAR_USAGE, STORED_USAGE, SOLAR_STORED, SOLAR_LOST]
 colors = {
-    'GasUsage': '#999999',
-    'SolarUsage': '#00FF00',
-    'StoredUsage': '#00bcd4',
-    'SolarStored': '#FFC300',
-    'SolarLost': '#2f2f2f',
-    'StoredState': '#bc00d4'
+    GAS_USAGE: '#999999',
+    SOLAR_USAGE: '#00FF00',
+    STORED_USAGE: '#00bcd4',
+    SOLAR_STORED: '#FFC300',
+    SOLAR_LOST: '#2f2f2f',
+    STORED_STATE: '#bc00d4',
+    USAGE_SUM: '#3b3bb3'
 }
 
 OPACITY = 0.85
 HOVERINFO = 'x+y'
-MODE = 'lines'
+LINES = 'lines'
 WIDTH = 0.5
-STACKGROUP = 'one'
+STACKGROUP_ONE = 'one'
+STACKGROUP_TWO = 'two'
+STACKGROUP_THREE = 'three'
 
 
 # todo: remove strings with constants
@@ -29,35 +40,60 @@ STACKGROUP = 'one'
 # todo: add demand line as sum of all usage values
 # todo: add docstring
 def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
-    x = [i for i in range(len(yearly_stats.index) + 1)]
+    x = [i for i in range(1, len(yearly_stats.index) + 1)]
     yearly_stats = yearly_stats.groupby(yearly_stats.index // num_hours_to_sum).sum()
+    usage_sum = [solar + gas + stored for (solar, gas, stored) in zip(
+        yearly_stats[SOLAR_USAGE], yearly_stats[GAS_USAGE], yearly_stats[
+            STORED_USAGE])]
     fig = go.Figure()
 
+    labeled_scatters = []
     for label in labels:
-        fig.add_trace(
+        labeled_scatters.append(
             go.Scatter(x=x, y=yearly_stats[label], name=label,
                        marker_color=colors[label],
-                       opacity=OPACITY, hoverinfo=HOVERINFO, mode=MODE,
+                       opacity=OPACITY, hoverinfo=HOVERINFO, mode=LINES,
                        line=dict(width=WIDTH, color=colors[label]),
-                       stackgroup=STACKGROUP))
-    stored_state_stats = [yearly_stats['SolarStored'][0]-
-                          yearly_stats['StoredUsage'][0]]
-    for i in range(1, len(yearly_stats.index)):
-        difference = yearly_stats['SolarStored'][i]-yearly_stats['StoredUsage'][i]
-        stored_state_stats += [stored_state_stats[i-1] + difference]
+                       stackgroup=STACKGROUP_ONE)
+        )
 
-    fig.add_trace(
-        go.Scatter(x=x, y=stored_state_stats, name='StoredState',
-                   marker_color=colors['StoredState'],
-                   opacity=OPACITY, hoverinfo=HOVERINFO, mode=MODE,
-                   line=dict(width=WIDTH, color=colors['StoredState']),
-                   stackgroup=STACKGROUP))
+        battery_state_scatter = go.Scatter(
+            x=x, y=stored_state_stats(yearly_stats),
+            name=STORED_STATE,
+            marker_color=colors[STORED_STATE],
+            opacity=OPACITY,
+            hoverinfo=HOVERINFO,
+            mode=LINES,
+            line=dict(width=WIDTH, color=colors[STORED_STATE]),
+            stackgroup=STACKGROUP_TWO)
+
+        usage_sum_scatter = go.Scatter(
+            x=x, y=usage_sum,
+            name=USAGE_SUM,
+            marker_color=colors[USAGE_SUM],
+            opacity=OPACITY, hoverinfo=HOVERINFO, mode=LINES,
+            line=dict(width=WIDTH, color=colors[USAGE_SUM]),
+            stackgroup=STACKGROUP_THREE)
+
+    fig.add_traces(labeled_scatters +
+                   [battery_state_scatter, usage_sum_scatter])
 
     fig.update_layout(barmode='stack'
                       , title='Day Usage'
                       , xaxis_title='Day In Year'
                       , yaxis_title='Usage (kWh)')
     return fig
+
+
+def stored_state_stats(yearly_stats):
+    stored_state = [yearly_stats['SolarStored'][0] -
+                    yearly_stats['StoredUsage'][0]]
+    for i in range(1, len(yearly_stats.index)):
+        difference = yearly_stats['SolarStored'][i] - \
+                     yearly_stats['StoredUsage'][i]
+        stored_state.append(stored_state[i - 1] + difference)
+
+    return stored_state
 
 
 def yearly_graph(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
