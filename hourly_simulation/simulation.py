@@ -40,8 +40,8 @@ def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_ca
     battery_selling_income = electricity_use.df[electricity_use.StoredSold].to_numpy().dot(
         selling_income_per_hour.to_numpy())
     total_selling_income = immediate_selling_income + battery_selling_income
-    total_solar_opex = power_solar_panels * params.SOLAR_OPEX
-    total_solar_capex = power_solar_panels * params.SOLAR_CAPEX / time_span
+    total_solar_opex = power_solar_panels * params.PV_OPEX
+    total_solar_capex = power_solar_panels * params.PV_CAPEX / time_span
     total_battery_opex = battery_capacity * params.BATTERY_OPEX
     total_battery_capex = battery_capacity * params.BATTERY_CAPEX / time_span
     return total_gas_cost + total_solar_opex + total_solar_capex + total_battery_opex + total_battery_capex - total_selling_income

@@ -29,12 +29,15 @@ NORMALISED_SOLAR_PRODUCTION.df[NORMALISED_SOLAR_PRODUCTION.SolarProduction] /= \
 PARAMS_PATH = "hourly_simulation/parameters.csv"
 
 
-def get_simulation_parameters(csv_path):
+def get_simulation_parameters(csv_path, with_units=False):
     params = {}
     with open(csv_path, newline='\n') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         for row in reader:
-            params[row[0]] = float(row[1])
+            if with_units:
+                params[row[0]] = (float(row[1]), row[2])
+            else:
+                params[row[0]] = float(row[1])
     return params
 
 

@@ -43,9 +43,7 @@ def check_reached_edges_of_iterator(solar_panel_power_it: Iterator, num_batterie
 
 def run_scenarios(demand: DemandDf, single_panel_production: ProductionDf, simulated_year: int,
                   solar_panel_power_it: Iterator, num_batteries_it: Iterator, strategy: Callable, params: Params,
-                  progress_bar: List[float],
-                  time_span=25) -> \
-        Tuple[SimulationResults, pd.DataFrame, str]:
+                  progress_bar: List[float], time_span=25) -> Tuple[SimulationResults, pd.DataFrame, str]:
     """
     Run the simulation of various solar panel and battery combinations
     :param params:

@@ -1,8 +1,8 @@
-import numpy as np
+from typing import Iterator
+
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
-from typing import Iterator
 
 from df_objects.df_objects import SimulationResults, DemandDf
 
@@ -17,7 +17,6 @@ USAGE_SUM = 'UsageSum'
 SOLAR_SOLD = 'SolarSold'
 STORED_SOLD = 'StoredSold'
 GAS_STORED = 'GasStored'
-
 
 yearly_stats_labels = [GAS_USAGE, SOLAR_USAGE, STORED_USAGE,
                        SOLAR_STORED, SOLAR_LOST, STORED_SOLD, SOLAR_SOLD, GAS_STORED]
@@ -61,14 +60,11 @@ DASH = 'dash'
 HOURS_IN_DAY = 24
 
 
-# todo: remove strings with constants
-# todo: add battery level line
-# todo: add demand line as sum of all usage values
 # todo: add docstring
 def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
                      batteries_cap, demand: DemandDf,
                      num_hours_to_sum=1):
-    x = [f"{(i//HOURS_IN_DAY) + 1} ({i%HOURS_IN_DAY + 1})"
+    x = [f"{(i // HOURS_IN_DAY) + 1} ({i % HOURS_IN_DAY + 1})"
          for i in range(len(yearly_stats.index))]
 
     yearly_stats = yearly_stats.groupby(yearly_stats.index // num_hours_to_sum).sum()
@@ -91,15 +87,15 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
                        line=dict(width=WIDTH, color=colors[label]),
                        stackgroup=STACKGROUP_ONE)
         )
-        # battery_state_scatter = go.Scatter(
-        #     x=x, y=stored_state_stats(yearly_stats, batteries_num, batteries_cap),
-        #     name=names[STORED_STATE],
-        #     marker_color=colors[STORED_STATE],
-        #     opacity=OPACITY,
-        #     hoverinfo=HOVERINFO,
-        #     mode=LINES,
-        #     line=dict(width=WIDTH, color=colors[STORED_STATE]),
-        #     stackgroup=STACKGROUP_TWO)
+        battery_state_scatter = go.Scatter(
+            x=x, y=stored_state_stats(yearly_stats, batteries_num, batteries_cap),
+            name=names[STORED_STATE],
+            marker_color=colors[STORED_STATE],
+            opacity=OPACITY,
+            hoverinfo=HOVERINFO,
+            mode=LINES,
+            line=dict(width=WIDTH, color=colors[STORED_STATE]),
+            stackgroup=STACKGROUP_TWO)
 
         usage_sum_scatter = go.Scatter(
             x=x, y=demand.df[demand.Demand],
@@ -109,7 +105,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
             line=dict(width=THICK_WIDTH, color=colors[USAGE_SUM], dash=DASH)
         )
 
-    # fig.add_trace(battery_state_scatter, row=1, col=1)
+    fig.add_trace(battery_state_scatter, row=1, col=1)
     fig.add_traces(labeled_scatters + [usage_sum_scatter], rows=2, cols=1)
     fig.update_xaxes(matches='x')
     fig.update_xaxes(title_text="Day(hour)", row=2, col=1)
@@ -121,7 +117,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
 
 
 def normalize_battery(num, batteries_num, batteries_cap):
-    return (100*num)/(batteries_num*batteries_cap)
+    return (100 * num) / (batteries_num * batteries_cap)
 
 
 def stored_state_stats(yearly_stats, batteries_num, batteries_cap):
@@ -192,14 +188,3 @@ def simulation_graph(simulation_results: SimulationResults, solar_panel_power_it
     fig.update_xaxes(title_text="number of batteries", row=1, col=1)
     fig.update_yaxes(title_text="Max solar panel power [kw]", row=1, col=1)
     return fig
-
-
-if __name__ == '__main__':
-    data = pd.DataFrame(columns=['GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored', 'SolarLost'])
-    df_len = (365 * 24)
-    data['GasUsage'] = np.random.normal(20, 3, df_len)
-    data['SolarUsage'] = np.random.normal(18, 4, df_len)
-    data['StoredUsage'] = np.random.normal(5, 1, df_len)
-    data['SolarStored'] = np.random.normal(5, 1, df_len)
-    data['SolarLost'] = np.random.normal(3, 1, df_len)
-    yearly_graph(data)
