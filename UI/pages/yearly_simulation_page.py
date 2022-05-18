@@ -8,7 +8,7 @@ from dash.exceptions import PreventUpdate
 from UI.UI_params import *
 from df_objects.df_objects import DemandDf, ProductionDf
 from hourly_simulation.parameters import NORMALISED_SOLAR_PRODUCTION, Params, \
-    get_simaltion_paramaters, PARAMS_PATH
+    get_simulation_parameters, PARAMS_PATH
 from hourly_simulation.simulation import get_usage_profile
 from output_graphs import yearly_graph_fig
 
@@ -63,7 +63,7 @@ def run_simulation(n_clicks, num_batteries, solar_panel_power_kw, simulated_year
         raise PreventUpdate
     demand = DemandDf(pd.read_csv(os.path.join(SIMULATION_DEMAND_INPUT_PATH, place_to_research), index_col=0))
     normalised_panel_production = ProductionDf(NORMALISED_SOLAR_PRODUCTION.df.copy())
-    wanted_simulation_params = Params(**get_simaltion_paramaters(PARAMS_PATH))
+    wanted_simulation_params = Params(**get_simulation_parameters(PARAMS_PATH))
     electricity_use = get_usage_profile(demand=demand,
                                         normalised_production=normalised_panel_production,
                                         params=wanted_simulation_params,

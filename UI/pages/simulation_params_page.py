@@ -3,8 +3,9 @@ from datetime import datetime
 
 import dash_bootstrap_components as dbc
 from dash import dcc, html, Input, State, Output, callback
+from dash.exceptions import PreventUpdate
 
-from hourly_simulation.parameters import simulation_params, get_simaltion_paramaters, PARAMS_PATH
+from hourly_simulation.parameters import simulation_params, get_simulation_parameters, PARAMS_PATH
 
 params = simulation_params
 
@@ -16,7 +17,7 @@ def get_layout():
             html.Tr([
                 html.Td(k),
                 html.Td(dbc.Input(id=k, value=v, type='number'))]) for k, v in
-            get_simaltion_paramaters(PARAMS_PATH).items()
+            get_simulation_parameters(PARAMS_PATH).items()
         ], id="simulation_params_table"),
         dbc.Button(id='save_parameters', children='Save Parameters', n_clicks=0),
         dcc.Loading(
@@ -34,6 +35,8 @@ def get_layout():
 )
 def update_params(n_clicks, params_table):
     global params
+    if n_clicks == 0:
+        raise PreventUpdate()
     try:
         params = {param["props"]["children"][0]["props"]["children"]:
                       param["props"]["children"][1]["props"]["children"]["props"]["value"]
