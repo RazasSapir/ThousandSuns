@@ -35,14 +35,14 @@ colors = {
     SOLAR_STORED: '#FFC300',
     SOLAR_LOST: '#2f2f2f',
     STORED_STATE: '#bc00d4',
-    USAGE_SUM: '#3b3bb3'
+    USAGE_SUM: '#b33b3b'
 }
 
 OPACITY = 0.85
 HOVERINFO = 'x+y'
 LINES = 'lines'
 WIDTH = 0.5
-THICK_WIDTH = 2
+THICK_WIDTH = 3.5
 STACKGROUP_ONE = 'one'
 STACKGROUP_TWO = 'two'
 STACKGROUP_THREE = 'three'
