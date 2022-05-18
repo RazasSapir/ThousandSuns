@@ -1,10 +1,16 @@
+import os.path
+
 from hourly_simulation import strategies
 
-demand_files = {"Hatzor": r'data/consumption_hatzor.csv',
-                "Ramat David": r'data/consumption_ramat_david.csv',
-                "Tel Nof": r'data/consumption_tel_nof.csv',
-                "Nevatim": r'data/consumption_nevatim.csv',
-                "Palmahim": r'data/consumption_palmahim.csv',
-                "Hatzerim": r'data/consumption_Hatzerim.csv'}
+SIMULATION_DEMAND_INPUT_PATH = r"data/simulation_demand_input"
+demand_files = os.listdir(SIMULATION_DEMAND_INPUT_PATH)
 
 use_strategies = {"Greedy Demand": strategies.greedy_use_strategy}
+
+ASSETS_FOLDER = r"UI/assets"
+MADOR_LOGO = r"MadorLogo.png"
+TALPIOT_LOGO = r"TalpiotLogo.png"
+
+YEARLY_SIMULATION_PAGE = '/'
+FIND_OPTIMUM_PAGE = '/find_optimum'
+SIMULATION_PARAMS_PAGE = "/simulation_params"

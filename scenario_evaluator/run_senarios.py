@@ -1,16 +1,16 @@
 import logging
-import pandas as pd
 from typing import Iterator, Tuple, Callable
+
+import pandas as pd
 from tqdm import tqdm
 
 from df_objects.df_objects import DemandDf, ProductionDf, SimulationResults
-from hourly_simulation import strategies
 from hourly_simulation.parameters import Params
 from hourly_simulation.simulation import simulate_use
 
 
 def check_reached_edges_of_iterator(solar_panel_power_it: Iterator, num_batteries_it: Iterator,
-                                    optimal_power, optimal_num_batteries) -> None:
+                                    optimal_power, optimal_num_batteries) -> str:
     """
     Checks whether the one of the optimal values reached the minimum / maximum of the iterator
     :param solar_panel_power_it: iterator for different solar panels
@@ -19,19 +19,32 @@ def check_reached_edges_of_iterator(solar_panel_power_it: Iterator, num_batterie
     :param optimal_num_batteries: simulated optimal number of batteries
     :return: None
     """
+    results = ""
     if optimal_power == min(solar_panel_power_it):
-        logging.warning("Reached the 'start edge' of the solar power range: " + str(optimal_power))
+        msg = "Reached the 'start edge' of the solar power range: " + str(optimal_power)
+        logging.warning(msg)
+        results += msg + '\n'
     elif optimal_power == max(solar_panel_power_it):
-        logging.warning("Reached the 'stop edge' of the solar power range: " + str(optimal_power))
+        msg = "Reached the 'stop edge' of the solar power range: " + str(optimal_power)
+        logging.warning(msg)
+        results += msg + '\n'
     if optimal_num_batteries == min(num_batteries_it):
-        logging.warning("Reached the 'start edge' of the solar power range: " + str(optimal_num_batteries))
+        msg = "Reached the 'start edge' of the num_batteries range: " + str(optimal_num_batteries)
+        logging.warning(msg)
+        results += msg + '\n'
     elif optimal_num_batteries == max(num_batteries_it):
-        logging.warning("Reached the 'stop edge' of the solar power range: " + str(optimal_num_batteries))
+        msg = "Reached the 'stop edge' of the num_batteries range: " + str(optimal_num_batteries)
+        logging.warning(msg)
+        results += msg + '\n'
+    if not results:
+        return "Optimal Combination is in range"
+    return results
 
 
 def run_scenarios(demand: DemandDf, single_panel_production: ProductionDf, simulated_year: int,
-                  solar_panel_power_it: Iterator, num_batteries_it: Iterator, strategy: Callable, params: Params, time_span=25) -> \
-        Tuple[SimulationResults, pd.DataFrame]:
+                  solar_panel_power_it: Iterator, num_batteries_it: Iterator, strategy: Callable, params: Params,
+                  time_span=25) -> \
+        Tuple[SimulationResults, pd.DataFrame, str]:
     """
     Run the simulation of various solar panel and battery combinations
     :param params:
@@ -60,8 +73,8 @@ def run_scenarios(demand: DemandDf, single_panel_production: ProductionDf, simul
 
     df_results = SimulationResults(pd.DataFrame.from_dict(simulation_results))
     optimal_scenario = df_results.df.loc[df_results.df[df_results.Cost].idxmin()]
-    check_reached_edges_of_iterator(solar_panel_power_it=solar_panel_power_it,
-                                    num_batteries_it=num_batteries_it,
-                                    optimal_power=optimal_scenario[df_results.PowerSolar],
-                                    optimal_num_batteries=optimal_scenario[df_results.NumBatteries])
-    return df_results, optimal_scenario
+    in_bounds = check_reached_edges_of_iterator(solar_panel_power_it=solar_panel_power_it,
+                                                num_batteries_it=num_batteries_it,
+                                                optimal_power=optimal_scenario[df_results.PowerSolar],
+                                                optimal_num_batteries=optimal_scenario[df_results.NumBatteries])
+    return df_results, optimal_scenario, in_bounds
