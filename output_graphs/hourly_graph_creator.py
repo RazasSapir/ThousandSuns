@@ -104,10 +104,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num, batteries_cap,
     fig.update_yaxes(title_text="percentage %", row=1, col=1)
     fig.update_yaxes(title_text="kWh", row=2, col=1)
 
-    fig.update_layout(barmode='stack'
-                      , title='Day Usage'
-                      , xaxis_title='Day In Year'
-                      , yaxis_title='kWh')
+    fig.update_layout(barmode='stack', title='Day Usage')
     return fig
 
 
