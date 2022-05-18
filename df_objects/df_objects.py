@@ -24,14 +24,17 @@ class SimulationResults(DataFrameWrapper):
 
 class ElectricityUseDf(InputDataFrameWrapper):
     GasUsage = 'GasUsage'
+    GasStored = 'GasStored'
     SolarUsage = 'SolarUsage'
     StoredUsage = 'StoredUsage'
     SolarStored = 'SolarStored'
     SolarLost = 'SolarLost'
     SolarSold = 'SolarSold'
     StoredSold = 'StoredSold'
+
     COLUMNS = [InputDataFrameWrapper.HourOfYear,
                GasUsage,
+               GasStored,
                SolarUsage,
                StoredUsage,
                SolarStored,

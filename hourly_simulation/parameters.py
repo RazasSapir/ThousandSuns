@@ -1,6 +1,5 @@
-import csv
 from collections import namedtuple
-
+import csv
 import pandas as pd
 
 from df_objects.df_objects import CostElectricityDf, ProductionDf
@@ -10,6 +9,7 @@ ELECTRICITY_COST_PATH = 'data/electricity_cost.csv'
 ELECTRICITY_SELLING_INCOME_PATH = 'data/electricity_sell_income.csv'
 ELECTRICITY_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_PATH))  # ILS per Kw
 ELECTRICITY_SELLING_INCOME = CostElectricityDf(pd.read_csv(ELECTRICITY_SELLING_INCOME_PATH))  # ILS per Kw
+
 
 # Solar Panels
 NATIONAL_SOLAR_PRODUCTION_PATH = 'data/national_solar_production.csv'

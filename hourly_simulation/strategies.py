@@ -60,8 +60,8 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Para
     :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
     """
     len_simulation = len(demand.df[demand.HourOfYear])
-    gas_usage_arr, solar_usage_arr, stored_usage_arr, solar_stored_arr, \
-    solar_lost_arr = __greedy_use_loop(len_simulation,
+    gas_usage_arr, gas_stored_arr, solar_usage_arr, stored_usage_arr, solar_stored_arr, \
+    solar_lost_arr, solar_sold_arr, stored_sold_arr = __greedy_use_loop(len_simulation,
                                        battery_capacity,
                                        battery_power,
                                        params.BATTERY_EFFICIENCY,
@@ -78,6 +78,7 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Para
     # no selling in this strategy
     hourly_use.df[ElectricityUseDf.SolarSold] = 0
     hourly_use.df[ElectricityUseDf.StoredSold] = 0
+    hourly_use.df[ElectricityUseDf.GasStored] = 0
     return hourly_use
 
 
@@ -85,10 +86,14 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Para
 def __greedy_use_loop(len_simulation, battery_capacity, battery_power, battery_efficiency, demand, production):
     storage: float = 0
     gas_usage_arr = np.zeros(len_simulation)
+    gas_stored_arr = np.zeros(len_simulation)
     solar_usage_arr = np.zeros(len_simulation)
     stored_usage_arr = np.zeros(len_simulation)
     solar_stored_arr = np.zeros(len_simulation)
     solar_lost_arr = np.zeros(len_simulation)
+    solar_sold_arr = np.zeros(len_simulation)
+    stored_sold_arr = np.zeros(len_simulation)
+
     for i in range(len_simulation):
         needed_power = demand[i]
         solar_used = min(production[i], needed_power)
@@ -105,7 +110,8 @@ def __greedy_use_loop(len_simulation, battery_capacity, battery_power, battery_e
         storage -= stored_used
         needed_power -= stored_used
         gas_usage_arr[i] = needed_power
-    return gas_usage_arr, solar_usage_arr, stored_usage_arr, solar_stored_arr, solar_lost_arr
+    return gas_usage_arr, gas_stored_arr, solar_usage_arr, stored_usage_arr, solar_stored_arr, solar_lost_arr, \
+           solar_sold_arr, stored_sold_arr
 
 
 def smart_storing_strategy(demand: DemandDf, production: ProductionDf, cost_profile: CostElectricityDf,
@@ -144,7 +150,7 @@ def smart_storing_strategy(demand: DemandDf, production: ProductionDf, cost_prof
 
 def first_selling_strategy(demand: DemandDf, production: ProductionDf, binary_cost_profile: CostElectricityDf,
                            cost_profile: CostElectricityDf, sell_profile: CostElectricityDf, battery_capacity: float,
-                           battery_power: float, sale_max_power: float, battery_efficiency: float) -> ElectricityUseDf:
+                           battery_power, sale_max_power: float, battery_efficiency: float) -> ElectricityUseDf:
     """
         Given a matching rect cost and sell function
         :param demand: DemandDf: pd.DataFrame(columns=[HourOfYear, 'Demand'])
@@ -161,20 +167,22 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, binary_co
     if not len_simulation % 24 == 0:
         raise ValueError("Length of input should be a whole number of days")
 
-    days = []
     # Helpful definitions
     get_index = lambda d_index, h_index: day_index * 24 + hour_index
     bin_cost = binary_cost_profile.df[binary_cost_profile.Cost]
     production = production.df[production.SolarProduction]  # overwriting
     demand = demand.df[demand.Demand]
+    day_use = {c: np.zeros(len(demand)) for c in ElectricityUseDf.COLUMNS}
+    total_stored = 0
     # Iterating days
     for day_index in range(0, len_simulation // 24):
-        day_use = {c: np.zeros(24) for c in ElectricityUseDf.COLUMNS}
         # iterate expensive hours and use all the production for the demand
-        expensive_hours = [i for i, x in enumerate(bin_cost[day_index * 24, (day_index + 1) * 24]) if x == 1]
+        expensive_hours = [i for i, x in enumerate(bin_cost[day_index * 24: (day_index + 1) * 24]) if x == 1]
+        cheap_hours = [i for i, x in enumerate(bin_cost[day_index * 24: (day_index + 1) * 24]) if x == 0]
+        expansive_completion = 0
+        expansive_use_completion = 0
         if not len(expensive_hours) == 0:
-            is_buying_profitable = get_is_buying_profitable(battery_efficiency, binary_cost_profile, cost_profile,
-                                                            sell_profile)
+            print(f"day {day_index} have expansive hours")
             for hour_index in expensive_hours:
                 i = get_index(day_index, hour_index)
                 needed_power = demand[i]
@@ -183,27 +191,90 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, binary_co
                 demand[i] -= solar_used
                 solar_sold = min(production[i] - solar_used, sale_max_power)
                 day_use[ElectricityUseDf.SolarSold][i] += solar_sold
-                solar_lost = production[i] - solar_used - solar_sold
+                solar_lost = production[i] - solar_used - solar_sold  # not storing in expansive hours
                 day_use[ElectricityUseDf.SolarLost][i] += solar_lost
                 production[i] -= (solar_used + solar_sold + solar_lost)
+                expansive_completion += min(demand[i] + sale_max_power - solar_sold,
+                                            battery_power)  # to buy in cheap hours later
+                expansive_use_completion += min(demand[i], battery_power)
             # Storing over production
-            total_stored = 0
             for hour_index in range(expensive_hours[0] - 1, -1, -1):
-                if total_stored == battery_capacity:
+                if total_stored >= battery_capacity:  # trying to fill the battery
                     break
                 i = get_index(day_index, hour_index)
                 needed_power = demand[i]
                 overproduction = production[i] - min(production[i], needed_power)
                 storing = min(overproduction, battery_capacity - total_stored, battery_power)
-                total_stored += storing
-                day_use[ElectricityUseDf.SolarStored][i] += total_stored
+                total_stored += storing * battery_efficiency  # when using battery, some power disappears
+                day_use[ElectricityUseDf.SolarStored][i] += storing * battery_efficiency
                 production[i] -= storing
+
+            is_buying_profitable = get_is_buying_profitable(battery_efficiency, binary_cost_profile, cost_profile,
+                                                            sell_profile)
             if is_buying_profitable:
-                # todo: loop again and buy the to fill the battery
-                pass
+                effective_battery_capacity = min(battery_capacity, expansive_completion)
+                for hour_index in range(expensive_hours[0] - 1, -1, -1):
+                    if total_stored >= effective_battery_capacity:
+                        break
+                    i = get_index(day_index, hour_index)
+                    solar_buy = min(battery_power, effective_battery_capacity - total_stored)
+                    total_stored += solar_buy  # not multiplied by the battery efficiency, effectively buying more power
+                    day_use[ElectricityUseDf.GasStored][i] = solar_buy
+            expansive_sell_completion = total_stored - expansive_use_completion
+            for hour_index in expensive_hours:
+                i = get_index(day_index, hour_index)
+                stored_used = min(demand[i], battery_power - day_use[ElectricityUseDf.SolarSold][i], total_stored)
+                total_stored -= stored_used
+                day_use[ElectricityUseDf.StoredUsage][i] = stored_used
+                stored_sell = min(sale_max_power - day_use[ElectricityUseDf.SolarSold][i], battery_power -
+                                  day_use[ElectricityUseDf.SolarSold][i] - stored_used, expansive_sell_completion)
+                expansive_sell_completion -= stored_sell
+                day_use[ElectricityUseDf.StoredSold][i] = stored_sell
+                day_use[ElectricityUseDf.GasUsage][i] = demand[i] - stored_used
+
+            for hour_index in cheap_hours:
+                i = get_index(day_index, hour_index)
+                solar_used = min(production[i], demand[i])
+                day_use[ElectricityUseDf.SolarUsage][i] = solar_used
+                solar_sold = min(production[i] - solar_used, sale_max_power)
+                day_use[ElectricityUseDf.SolarSold][i] = solar_sold
+                day_use[ElectricityUseDf.SolarLost][i] = production[i] - solar_used - solar_sold
+                day_use[ElectricityUseDf.GasUsage][i] = demand[i] - solar_used
+
         else:
+            print(f"day {day_index} don't have expansive hours")
             # greedy_with_sale
-            pass
+            for i in range(day_index * 24, (day_index + 1) * 24):
+                needed_power = demand[i]
+                solar_used = min(production[i], needed_power)
+                day_use[ElectricityUseDf.SolarUsage][i] = solar_used
+                needed_power -= solar_used
+                solar_stored = min(production[i] - solar_used, battery_capacity - total_stored,
+                                   battery_power) * battery_efficiency
+                day_use[ElectricityUseDf.SolarStored][i] = solar_stored
+                total_stored += solar_stored
+                solar_sold = min(production[i] - solar_used - solar_stored, sale_max_power)
+                day_use[ElectricityUseDf.SolarSold][i] = solar_sold
+                solar_lost = production[i] - solar_used - solar_stored - solar_sold
+                day_use[ElectricityUseDf.SolarLost][i] = solar_lost
+                stored_used = min(total_stored, needed_power, battery_power)
+                day_use[ElectricityUseDf.StoredUsage][i] = stored_used
+                total_stored -= stored_used
+                needed_power -= stored_used
+                day_use[ElectricityUseDf.GasUsage][i] = needed_power
+
+    hourly_use = ElectricityUseDf(pd.DataFrame())
+    hourly_use.df[hourly_use.GasUsage] = day_use[ElectricityUseDf.GasUsage]
+    hourly_use.df[hourly_use.SolarUsage] = day_use[ElectricityUseDf.SolarUsage]
+    hourly_use.df[hourly_use.StoredUsage] = day_use[ElectricityUseDf.StoredUsage]
+    hourly_use.df[hourly_use.SolarStored] = day_use[ElectricityUseDf.SolarStored]
+    hourly_use.df[hourly_use.SolarLost] = day_use[ElectricityUseDf.SolarLost]
+    hourly_use.df[hourly_use.SolarSold] = day_use[ElectricityUseDf.SolarSold]
+    hourly_use.df[hourly_use.StoredSold] = day_use[ElectricityUseDf.StoredSold]
+    hourly_use.df[hourly_use.GasStored] = day_use[ElectricityUseDf.GasStored]
+
+    hourly_use.df[hourly_use.HourOfYear] = sell_profile.df[CostElectricityDf.HourOfYear]
+    return hourly_use
 
 
 def get_is_buying_profitable(battery_efficiency, binary_cost_profile, cost_profile, sell_profile):

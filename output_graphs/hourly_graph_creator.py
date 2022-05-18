@@ -6,62 +6,130 @@ from typing import Iterator
 
 from df_objects.df_objects import SimulationResults
 
-labels = ['GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored',
-          'SolarLost']
+GAS_USAGE = 'GasUsage'
+SOLAR_USAGE = 'SolarUsage'
+STORED_USAGE = 'StoredUsage'
+SOLAR_STORED = 'SolarStored'
+SOLAR_LOST = 'SolarLost'
+
+STORED_STATE = 'StoredState'
+USAGE_SUM = 'UsageSum'
+
+yearly_stats_labels = [GAS_USAGE, SOLAR_USAGE, STORED_USAGE,
+                       SOLAR_STORED, SOLAR_LOST]
+
+names = {
+    GAS_USAGE: 'Gas Based Electricity Consumption',
+    SOLAR_USAGE: 'Solar Energy Consumption',
+    STORED_USAGE: 'Stored Solar Energy Consumption',
+    SOLAR_STORED: 'Stored Solar Energy',
+    SOLAR_LOST: 'Lost Solar Energy',
+    STORED_STATE: 'Batteries Charge',
+    USAGE_SUM: 'Total Energy Consumption'
+}
+
 colors = {
-    'GasUsage': '#999999',
-    'SolarUsage': '#00FF00',
-    'StoredUsage': '#00bcd4',
-    'SolarStored': '#FFC300',
-    'SolarLost': '#2f2f2f',
-    'StoredState': '#bc00d4'
+    GAS_USAGE: '#999999',
+    SOLAR_USAGE: '#00FF00',
+    STORED_USAGE: '#00bcd4',
+    SOLAR_STORED: '#FFC300',
+    SOLAR_LOST: '#2f2f2f',
+    STORED_STATE: '#bc00d4',
+    USAGE_SUM: '#b33b3b'
 }
 
 OPACITY = 0.85
 HOVERINFO = 'x+y'
-MODE = 'lines'
+LINES = 'lines'
 WIDTH = 0.5
-STACKGROUP = 'one'
+THICK_WIDTH = 3.5
+STACKGROUP_ONE = 'one'
+STACKGROUP_TWO = 'two'
+STACKGROUP_THREE = 'three'
+DASH = 'dash'
+
+HOURS_IN_DAY = 24
 
 
 # todo: remove strings with constants
 # todo: add battery level line
 # todo: add demand line as sum of all usage values
 # todo: add docstring
-def yearly_graph_fig(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
-    x = [i for i in range(len(yearly_stats.index) + 1)]
+def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num, batteries_cap,
+                     num_hours_to_sum=1):
+    x = [f"{(i//HOURS_IN_DAY) + 1} ({i%HOURS_IN_DAY + 1})"
+         for i in range(len(yearly_stats.index))]
+
     yearly_stats = yearly_stats.groupby(yearly_stats.index // num_hours_to_sum).sum()
-    fig = go.Figure()
 
-    for label in labels:
-        fig.add_trace(
-            go.Scatter(x=x, y=yearly_stats[label], name=label,
+    usage_sum = [solar + gas + stored for (solar, gas, stored) in zip(
+        yearly_stats[SOLAR_USAGE],
+        yearly_stats[GAS_USAGE],
+        yearly_stats[STORED_USAGE])]
+
+    fig = make_subplots(rows=2, cols=1,
+                        shared_xaxes=True, row_heights=[0.4, 0.6])
+
+    labeled_scatters = []
+    for label in yearly_stats_labels:
+        labeled_scatters.append(
+            go.Scatter(x=x, y=yearly_stats[label], name=names[label],
                        marker_color=colors[label],
-                       opacity=OPACITY, hoverinfo=HOVERINFO, mode=MODE,
+                       opacity=OPACITY, hoverinfo=HOVERINFO, mode=LINES,
                        line=dict(width=WIDTH, color=colors[label]),
-                       stackgroup=STACKGROUP))
-    stored_state_stats = [yearly_stats['SolarStored'][0]-
-                          yearly_stats['StoredUsage'][0]]
-    for i in range(1, len(yearly_stats.index)):
-        difference = yearly_stats['SolarStored'][i]-yearly_stats['StoredUsage'][i]
-        stored_state_stats += [stored_state_stats[i-1] + difference]
+                       stackgroup=STACKGROUP_ONE)
+        )
+        battery_state_scatter = go.Scatter(
+            x=x, y=stored_state_stats(yearly_stats, batteries_num, batteries_cap),
+            name=names[STORED_STATE],
+            marker_color=colors[STORED_STATE],
+            opacity=OPACITY,
+            hoverinfo=HOVERINFO,
+            mode=LINES,
+            line=dict(width=WIDTH, color=colors[STORED_STATE]),
+            stackgroup=STACKGROUP_TWO)
 
-    fig.add_trace(
-        go.Scatter(x=x, y=stored_state_stats, name='StoredState',
-                   marker_color=colors['StoredState'],
-                   opacity=OPACITY, hoverinfo=HOVERINFO, mode=MODE,
-                   line=dict(width=WIDTH, color=colors['StoredState']),
-                   stackgroup=STACKGROUP))
+        usage_sum_scatter = go.Scatter(
+            x=x, y=usage_sum,
+            name=names[USAGE_SUM],
+            marker_color=colors[USAGE_SUM],
+            opacity=OPACITY, hoverinfo=HOVERINFO, mode=LINES,
+            line=dict(width=THICK_WIDTH, color=colors[USAGE_SUM], dash=DASH)
+        )
 
+    fig.add_trace(battery_state_scatter, row=1, col=1)
+    fig.add_traces(labeled_scatters + [usage_sum_scatter], rows=2, cols=1)
+    fig.update_xaxes(matches='x')
     fig.update_layout(barmode='stack'
                       , title='Day Usage'
                       , xaxis_title='Day In Year'
-                      , yaxis_title='Usage (kWh)')
+                      , yaxis_title='kWh')
     return fig
 
 
-def yearly_graph(yearly_stats: pd.DataFrame, num_hours_to_sum=1):
-    yearly_graph_fig(yearly_stats, num_hours_to_sum).show()
+def normalize_battery(num, batteries_num, batteries_cap):
+    print(batteries_num*batteries_cap)
+    return (100*num)/(batteries_num*batteries_cap)
+
+
+def stored_state_stats(yearly_stats, batteries_num, batteries_cap):
+    stored_state = [yearly_stats['SolarStored'][0] -
+                    yearly_stats['StoredUsage'][0]]
+    for i in range(1, len(yearly_stats.index)):
+        difference = yearly_stats['SolarStored'][i] - \
+                     yearly_stats['StoredUsage'][i]
+        difference = normalize_battery(difference,
+                                       batteries_num,
+                                       batteries_cap)
+        stored_state.append(stored_state[i - 1] + difference)
+
+    return stored_state
+
+
+def yearly_graph(yearly_stats: pd.DataFrame, batteries_num,
+                 batteries_cap, num_hours_to_sum=1):
+    yearly_graph_fig(yearly_stats, batteries_num,
+                     batteries_cap, num_hours_to_sum).show()
 
 
 def daily_graph(daily_stats: pd.DataFrame):
