@@ -14,9 +14,13 @@ SOLAR_LOST = 'SolarLost'
 
 STORED_STATE = 'StoredState'
 USAGE_SUM = 'UsageSum'
+SOLAR_SOLD = 'SolarSold'
+STORED_SOLD = 'StoredSold'
+GAS_STORED = 'GasStored'
+
 
 yearly_stats_labels = [GAS_USAGE, SOLAR_USAGE, STORED_USAGE,
-                       SOLAR_STORED, SOLAR_LOST]
+                       SOLAR_STORED, SOLAR_LOST, STORED_SOLD, SOLAR_SOLD, GAS_STORED]
 
 names = {
     GAS_USAGE: 'Gas Based Electricity Consumption',
@@ -25,7 +29,10 @@ names = {
     SOLAR_STORED: 'Stored Solar Energy',
     SOLAR_LOST: 'Lost Solar Energy',
     STORED_STATE: 'Batteries Charge',
-    USAGE_SUM: 'Total Energy Consumption'
+    USAGE_SUM: 'Total Energy Consumption',
+    SOLAR_SOLD: "Solar Energy Sold",
+    GAS_STORED: "Gas Energy Bought and Stored",
+    STORED_SOLD: "Stored Energy Sold"
 }
 
 colors = {
@@ -35,7 +42,10 @@ colors = {
     SOLAR_STORED: '#FFC300',
     SOLAR_LOST: '#2f2f2f',
     STORED_STATE: '#bc00d4',
-    USAGE_SUM: '#b33b3b'
+    USAGE_SUM: '#b33b3b',
+    SOLAR_SOLD: '#f2f2f2',
+    GAS_STORED: '#4500ff',
+    STORED_SOLD: '#0dc014'
 }
 
 OPACITY = 0.85
@@ -81,15 +91,15 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
                        line=dict(width=WIDTH, color=colors[label]),
                        stackgroup=STACKGROUP_ONE)
         )
-        battery_state_scatter = go.Scatter(
-            x=x, y=stored_state_stats(yearly_stats, batteries_num, batteries_cap),
-            name=names[STORED_STATE],
-            marker_color=colors[STORED_STATE],
-            opacity=OPACITY,
-            hoverinfo=HOVERINFO,
-            mode=LINES,
-            line=dict(width=WIDTH, color=colors[STORED_STATE]),
-            stackgroup=STACKGROUP_TWO)
+        # battery_state_scatter = go.Scatter(
+        #     x=x, y=stored_state_stats(yearly_stats, batteries_num, batteries_cap),
+        #     name=names[STORED_STATE],
+        #     marker_color=colors[STORED_STATE],
+        #     opacity=OPACITY,
+        #     hoverinfo=HOVERINFO,
+        #     mode=LINES,
+        #     line=dict(width=WIDTH, color=colors[STORED_STATE]),
+        #     stackgroup=STACKGROUP_TWO)
 
         usage_sum_scatter = go.Scatter(
             x=x, y=demand.df[demand.Demand],
@@ -99,7 +109,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
             line=dict(width=THICK_WIDTH, color=colors[USAGE_SUM], dash=DASH)
         )
 
-    fig.add_trace(battery_state_scatter, row=1, col=1)
+    # fig.add_trace(battery_state_scatter, row=1, col=1)
     fig.add_traces(labeled_scatters + [usage_sum_scatter], rows=2, cols=1)
     fig.update_xaxes(matches='x')
     fig.update_xaxes(title_text="Day(hour)", row=2, col=1)
@@ -146,6 +156,12 @@ def daily_graph(daily_stats: pd.DataFrame):
     fig.add_trace(go.Bar(x=x, y=daily_stats['SolarStored'], name='SolarStored', marker_color=colors['SolarStored'],
                          opacity=0.85))
     fig.add_trace(go.Bar(x=x, y=daily_stats['SolarLost'], name='SolarLost', marker_color=colors['SolarLost'],
+                         opacity=0.85))
+    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarSold'], name='SolarSold', marker_color=colors['SolarSold'],
+                         opacity=0.85))
+    fig.add_trace(go.Bar(x=x, y=daily_stats['GasStored'], name='GasStored', marker_color=colors['GasStored'],
+                         opacity=0.85))
+    fig.add_trace(go.Bar(x=x, y=daily_stats['StoredSold'], name='StoredSold', marker_color=colors['StoredSold'],
                          opacity=0.85))
     fig.update_layout(barmode='stack'
                       , title='Daily Usage'
