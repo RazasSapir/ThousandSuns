@@ -4,6 +4,7 @@ from numba import jit
 
 from df_objects.df_objects import DemandDf, ProductionDf, ElectricityUseDf, CostElectricityDf
 from hourly_simulation.parameters import Params
+from parameters import SELLING_COST, BINARY_SELLING_COST, BUY_COST
 
 
 # def store_first_strategy(demand: DemandDf, production: ProductionDf, battery_capacity: int) -> ElectricityUseDf:
@@ -142,9 +143,9 @@ def smart_storing_strategy(demand: DemandDf, production: ProductionDf, cost_prof
             needed_to_purchase[i - 1] = needed_to_purchase[i] - charge_bought
 
 
-def first_selling_strategy(demand: DemandDf, production: ProductionDf, binary_cost_profile: CostElectricityDf,
-                           cost_profile: CostElectricityDf, sell_profile: CostElectricityDf, battery_capacity: float,
-                           battery_power, sale_max_power: float, battery_efficiency: float) -> ElectricityUseDf:
+def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Params, binary_cost_profile:
+        CostElectricityDf = BINARY_SELLING_COST,cost_profile: CostElectricityDf = SELLING_COST, sell_profile:
+        CostElectricityDf = BUY_COST) -> ElectricityUseDf:
     """
         Given a matching rect cost and sell function
         :param demand: DemandDf: pd.DataFrame(columns=[HourOfYear, 'Demand'])
@@ -157,6 +158,11 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, binary_co
         :param battery_power: power of the battery
         :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost, SolarSold, StoredSold]
         """
+    sale_max_power = param.MAX_SELLING_POWER
+    battery_power = param.CHARGE_POWER
+    battery_capacity = param.BATTERY_CAPACITY
+    battery_efficiency = param.BATTERY_EFFICIENCY
+
     len_simulation = len(demand.df[demand.HourOfYear])
     if not len_simulation % 24 == 0:
         raise ValueError("Length of input should be a whole number of days")
