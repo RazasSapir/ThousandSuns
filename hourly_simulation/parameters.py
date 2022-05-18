@@ -22,7 +22,7 @@ NORMALISED_SOLAR_PRODUCTION.df[NORMALISED_SOLAR_PRODUCTION.SolarProduction] /= \
 PARAMS_PATH = "hourly_simulation/parameters.csv"
 
 
-def get_simaltion_paramaters(csv_path):
+def get_simulation_parameters(csv_path):
     params = {}
     with open(PARAMS_PATH, newline='\n') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
@@ -31,6 +31,6 @@ def get_simaltion_paramaters(csv_path):
     return params
 
 
-__simulation_params_dict = get_simaltion_paramaters(PARAMS_PATH)
+__simulation_params_dict = get_simulation_parameters(PARAMS_PATH)
 Params = namedtuple('Params', __simulation_params_dict)
 simulation_params = Params(**__simulation_params_dict)
