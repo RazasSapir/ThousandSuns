@@ -1,5 +1,6 @@
-from collections import namedtuple
 import csv
+from collections import namedtuple
+
 import pandas as pd
 
 from df_objects.df_objects import CostElectricityDf, ProductionDf
@@ -24,7 +25,7 @@ PARAMS_PATH = "hourly_simulation/parameters.csv"
 
 def get_simulation_parameters(csv_path):
     params = {}
-    with open(PARAMS_PATH, newline='\n') as csvfile:
+    with open(csv_path, newline='\n') as csvfile:
         reader = csv.reader(csvfile, delimiter=',')
         for row in reader:
             params[row[0]] = float(row[1])

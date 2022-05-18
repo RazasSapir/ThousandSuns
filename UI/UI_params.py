@@ -5,7 +5,8 @@ from hourly_simulation import strategies
 SIMULATION_DEMAND_INPUT_PATH = r"data/simulation_demand_input"
 demand_files = os.listdir(SIMULATION_DEMAND_INPUT_PATH)
 
-use_strategies = {"Greedy Demand": strategies.greedy_use_strategy}
+use_strategies = {"Greedy Demand": strategies.greedy_use_strategy,
+                  "Selling Strategy": strategies.first_selling_strategy}
 
 ASSETS_FOLDER = r"UI/assets"
 MADOR_LOGO = r"MadorLogo.png"
