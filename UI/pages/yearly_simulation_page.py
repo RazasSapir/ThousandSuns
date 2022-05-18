@@ -19,6 +19,8 @@ def get_layout():
             html.H1("Annual Simulation"),
             html.Table([
                 html.Tr([
+                    html.Td("Inputs:"), ]),
+                html.Tr([
                     html.Td("Place to Simulate: "),
                     html.Td(dcc.Dropdown(demand_files, id='place_to_research'))]),
                 html.Tr([

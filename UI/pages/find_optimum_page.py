@@ -21,9 +21,11 @@ def get_layout():
     return html.Div([
         html.Div([
             html.H1("Find Optimum"),
-            html.Table([
+            html.Table(style={"width": "100%"}, children=[
                 html.Tr([
                     html.Td(html.Table([
+                        html.Tr([
+                            html.Td("Inputs:"), ]),
                         html.Tr([
                             html.Td("Place to Simulate: "),
                             html.Td(dcc.Dropdown(demand_files, id='place_to_research'))]),
@@ -41,7 +43,7 @@ def get_layout():
                             html.Td(dbc.Input(id='number_batteries_min_range', value='3', type='number'))]),
                         html.Tr([
                             html.Td("To:"),
-                            html.Td(dbc.Input(id='number_batteries_range_max_range', value='4', type='number'))]),
+                            html.Td(dbc.Input(id='number_batteries_max_range', value='4', type='number'))]),
                         html.Tr([
                             html.Td("Points:"),
                             html.Td(dbc.Input(id='number_batteries_num_range', value='10', type='number')),
@@ -57,7 +59,7 @@ def get_layout():
                             html.Td(dbc.Input(id='solar_panel_power_kw_max_range', value='8000', type='number'))]),
                         html.Tr([
                             html.Td("Points:"),
-                            html.Td(dbc.Input(id='solar_panel_power_kw_range', value='10', type='number')),
+                            html.Td(dbc.Input(id='solar_panel_power_kw_num_range', value='10', type='number')),
                         ]),
                     ])),
                 ])
@@ -90,24 +92,25 @@ def progress_bar_update(n):
     Output('best_combination', component_property="children"),
     Output('reached_limits', component_property="children"),
     Input(component_id='run_simulation_button', component_property="n_clicks"),
-    State(component_id='number_batteries_range', component_property='value'),
-    State(component_id='solar_panel_power_kw_range', component_property='value'),
+    State(component_id='number_batteries_min_range', component_property='value'),
+    State(component_id='number_batteries_max_range', component_property='value'),
+    State(component_id='number_batteries_num_range', component_property='value'),
+    State(component_id='solar_panel_power_kw_min_range', component_property='value'),
+    State(component_id='solar_panel_power_kw_max_range', component_property='value'),
+    State(component_id='solar_panel_power_kw_num_range', component_property='value'),
     State(component_id='year_to_simulate', component_property='value'),
     State(component_id='use_strategy', component_property='value'),
     State(component_id='place_to_research', component_property='value'),
 )
-def run_optimal_simulation(n_clicks, num_batteries_range, solar_panel_power_kw_range, simulated_year, chosen_strategy,
-                           place_to_research):
+def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteries_num, pv_power_min, pv_power_max,
+                           pv_power_num, simulated_year, chosen_strategy, place_to_research):
     global progress_bar
     progress_bar = [0]
     if n_clicks == 0:
         raise PreventUpdate()
     try:
-        solar_panel_power_kw_range = [float(num.strip()) for num in str(solar_panel_power_kw_range).split(',')]
-        solar_panel_power_it = np.linspace(solar_panel_power_kw_range[0], solar_panel_power_kw_range[1],
-                                           int(solar_panel_power_kw_range[2]))
-        num_batteries_range = [float(num.strip()) for num in str(num_batteries_range).split(',')]
-        num_batteries_it = np.linspace(num_batteries_range[0], num_batteries_range[1], int(num_batteries_range[2]))
+        solar_panel_power_it = np.linspace(float(pv_power_min), float(pv_power_max), int(pv_power_num))
+        num_batteries_it = np.linspace(float(n_batteries_min), float(n_batteries_max), int(n_batteries_num))
         simulated_year = int(simulated_year)
         if not place_to_research or not chosen_strategy:
             raise PreventUpdate
