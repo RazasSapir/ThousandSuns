@@ -37,7 +37,7 @@ def get_layout():
                             html.Td("Use Strategy: "),
                             html.Td(dcc.Dropdown(list(use_strategies.keys()), id='use_strategy'))]),
                         html.Tr([
-                            html.Td("Time Span: "),
+                            html.Td("Time Span [Years]: "),
                             html.Td(dbc.Input(id='time_span_input', value='25', type='number'))])
                     ])),
                     html.Td(html.Table([

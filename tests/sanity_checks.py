@@ -1,5 +1,7 @@
 import logging
+
 import pandas as pd
+
 from df_objects.df_objects import ElectricityUseDf, DemandDf, ProductionDf
 from hourly_simulation.parameters import Params
 
@@ -19,8 +21,10 @@ def test_simulation(electricity_use: ElectricityUseDf, demand: DemandDf, product
     test_demand_is_reached(demand.df[demand.Demand], electricity_use, epsilon)
     test_production_is_used(production.df[production.SolarProduction], electricity_use, epsilon)
     test_all_stored_is_used(electricity_use, num_batteries * params.BATTERY_CAPACITY)
-    test_battery_capacity_is_not_passed(electricity_use, num_batteries * params.BATTERY_CAPACITY, epsilon)
+    test_battery_capacity_is_not_passed(electricity_use, num_batteries * params.BATTERY_CAPACITY,
+                                        num_batteries * params.CHARGE_POWER, epsilon)
     test_charge_power_not_passed(electricity_use, num_batteries * params.CHARGE_POWER)
+    test_selling_limit_not_passed(electricity_use, params.MAX_SELLING_POWER)
     logging.info("Passed all tests")
 
 
@@ -30,7 +34,7 @@ def test_non_negative(electricity_use: ElectricityUseDf) -> None:
     :param electricity_use: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost, SolarSold, StoredSold]
     :return: None
     """
-    assert not (electricity_use.df < 0).values.any()
+    assert not (electricity_use.df < 0).values.any(), "Found Negative value"
     logging.info("Passed test_non_negative")
 
 
@@ -44,7 +48,7 @@ def test_demand_is_reached(demand: pd.Series, electricity_use: ElectricityUseDf,
     """
     should_be_demand = electricity_use.df[electricity_use.SolarUsage] + electricity_use.df[electricity_use.GasUsage] + \
                        electricity_use.df[electricity_use.StoredUsage]
-    assert (should_be_demand - demand < epsilon).values.any()
+    assert (should_be_demand - demand < epsilon).values.any(), "Demand was not reached"
     logging.info("Passed test_demand_is_reached")
 
 
@@ -61,7 +65,7 @@ def test_production_is_used(production: pd.Series, electricity_use: ElectricityU
                            electricity_use.df[electricity_use.SolarLost] + \
                            electricity_use.df[electricity_use.SolarSold]
 
-    assert (should_be_production - production < epsilon).values.any()
+    assert (should_be_production - production < epsilon).values.any(), "Not all production was used"
     logging.info("passed test_production_is_used")
 
 
@@ -73,14 +77,15 @@ def test_all_stored_is_used(electricity_use: ElectricityUseDf, battery_capacity:
     :param battery_capacity: the maximum capacity of the battery
     :return: None
     """
-    assert abs(electricity_use.df[electricity_use.SolarStored].sum() -
+    assert abs(electricity_use.df[electricity_use.SolarStored].sum() +
+               electricity_use.df[electricity_use.GasStored].sum() -
                electricity_use.df[electricity_use.StoredUsage].sum() -
-               electricity_use.df[electricity_use.StoredSold].sum()) <= battery_capacity
+               electricity_use.df[electricity_use.StoredSold].sum()) <= battery_capacity, "Not all stored was used"
     logging.info("passed test_all_stored_is_used")
 
 
 def test_battery_capacity_is_not_passed(electricity_use: ElectricityUseDf, battery_capacity: float,
-                                        epsilon=0.05) -> None:
+                                        battery_power: float, epsilon=0.05) -> None:
     """
     Makes sure the battery capacity is not passed
     :param electricity_use: ElectricityUseDf of pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage,
@@ -91,8 +96,13 @@ def test_battery_capacity_is_not_passed(electricity_use: ElectricityUseDf, batte
     """
     simulate_battery = 0
     for row in electricity_use.df.itertuples():
-        simulate_battery += row.SolarStored - row.StoredUsage - row.StoredSold
-        assert -epsilon <= simulate_battery <= battery_capacity + epsilon
+        simulate_battery += row.SolarStored + row.GasStored - row.StoredUsage - row.StoredSold
+        assert row.SolarStored + row.GasStored <= battery_power, f"{row.SolarStored + row.GasStored} <= {battery_power}"
+        assert row.StoredUsage + row.StoredSold <= battery_power, f"{row.StoredUsage + row.StoredSold} <= {battery_power}"
+        assert not (
+                row.SolarStored + row.GasStored > 0 and row.StoredUsage + row.StoredSold > 0), f"not ({row.SolarStored + row.GasStored} > 0 and {row.StoredUsage + row.StoredSold} > 0)"
+        # todo: not sure the last should be a test, is charging the battery and using it at the same time allowed?
+        assert -epsilon <= simulate_battery <= battery_capacity + epsilon, f"{-epsilon} <= {simulate_battery} <= {battery_capacity + epsilon}"
     logging.info("passed test_battery_capacity_is_not_passed")
 
 
@@ -106,5 +116,19 @@ def test_charge_power_not_passed(electricity_use: ElectricityUseDf, charge_power
     """
     assert (charge_power -
             electricity_use.df[electricity_use.SolarStored] -
-            electricity_use.df[electricity_use.StoredSold] > 0).values.any()
+            electricity_use.df[electricity_use.StoredSold] > 0).values.any(), "Charging power limit was passed"
     logging.info("passed test_charge_power_not_passed")
+
+
+def test_selling_limit_not_passed(electricity_use: ElectricityUseDf, selling_limit: float) -> None:
+    """
+    Makes sure the charge power is not passed
+    :param electricity_use: ElectricityUseDf of pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage,
+    SolarStored, SolarLost])
+    :param charge_power: the maximum charge power of the battery
+    :return:
+    """
+    assert (selling_limit -
+            electricity_use.df[electricity_use.SolarSold] -
+            electricity_use.df[electricity_use.StoredSold] > 0).values.any(), "Selling power limit was passed"
+    logging.info("passed test_selling_limit_not_passed")
