@@ -60,7 +60,7 @@ DASH = 'dash'
 HOURS_IN_DAY = 24
 
 
-# todo: add docstring
+# todo: add docstring and docstring
 def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
                      batteries_cap, demand: DemandDf,
                      num_hours_to_sum=1):
@@ -185,6 +185,10 @@ def simulation_graph(simulation_results: SimulationResults, solar_panel_power_it
         go.Surface(x=num_batteries_it, y=solar_panel_power_it, z=z, opacity=.8, colorscale='Electric',
                    contours=dict(z=dict(show=True)))],
         rows=[1, 1], cols=[1, 2])
+    fig.update_layout(scene=dict(
+        xaxis_title='number of batteries',
+        yaxis_title='Max solar panel [kw]',
+        zaxis_title='Cost [ILS]'))
     fig.update_xaxes(title_text="number of batteries", row=1, col=1)
     fig.update_yaxes(title_text="Max solar panel power [kw]", row=1, col=1)
     return fig

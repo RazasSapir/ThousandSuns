@@ -8,7 +8,7 @@ def get_nav_bar(app):
     return dbc.Navbar(
         [
             dbc.NavbarBrand("Thousand Suns", className="ms-2"),
-            dbc.NavLink("Yearly Simulation", href=YEARLY_SIMULATION_PAGE),
+            dbc.NavLink("Annual Simulation", href=YEARLY_SIMULATION_PAGE),
             dbc.NavLink("Finding Optimum", href=FIND_OPTIMUM_PAGE),
             dbc.NavLink("Simulation Params", href=SIMULATION_PARAMS_PAGE),
             dbc.Row([

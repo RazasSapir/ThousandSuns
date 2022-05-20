@@ -12,28 +12,29 @@ from hourly_simulation.simulation import simulate_use
 def check_reached_edges_of_iterator(solar_panel_power_it: Iterator, num_batteries_it: Iterator,
                                     optimal_power, optimal_num_batteries) -> str:
     """
-    Checks whether the one of the optimal values reached the minimum / maximum of the iterator
+    Checks whether the one of the optimal values reached the minimum / maximum of the iterator.
+
     :param solar_panel_power_it: iterator for different solar panels
     :param num_batteries_it: iterator for different battery sizes
     :param optimal_power: simulated optimal solar power
     :param optimal_num_batteries: simulated optimal number of batteries
-    :return: None
+    :return: String status of optimal combination in bounds.
     """
     results = ""
     if optimal_power == min(solar_panel_power_it):
-        msg = "Reached the 'start edge' of the solar power range: " + str(optimal_power)
+        msg = "Reached the 'from' of the Solar panel max KW Range: " + str(optimal_power)
         logging.warning(msg)
         results += msg + '\n'
     elif optimal_power == max(solar_panel_power_it):
-        msg = "Reached the 'stop edge' of the solar power range: " + str(optimal_power)
+        msg = "Reached the 'to' of the Solar panel max KW Range: " + str(optimal_power)
         logging.warning(msg)
         results += msg + '\n'
     if optimal_num_batteries == min(num_batteries_it):
-        msg = "Reached the 'start edge' of the num_batteries range: " + str(optimal_num_batteries)
+        msg = "Reached the 'from' of the Batteries Range: " + str(optimal_num_batteries)
         logging.warning(msg)
         results += msg + '\n'
     elif optimal_num_batteries == max(num_batteries_it):
-        msg = "Reached the 'stop edge' of the num_batteries range: " + str(optimal_num_batteries)
+        msg = "Reached the 'to' of the Batteries Range: " + str(optimal_num_batteries)
         logging.warning(msg)
         results += msg + '\n'
     if not results:
@@ -41,17 +42,22 @@ def check_reached_edges_of_iterator(solar_panel_power_it: Iterator, num_batterie
     return results
 
 
-def run_scenarios(demand: DemandDf, single_panel_production: ProductionDf, simulated_year: int,
+def run_scenarios(demand: DemandDf, normalised_production: ProductionDf, simulated_year: int,
                   solar_panel_power_it: Iterator, num_batteries_it: Iterator, strategy: Callable, params: Params,
-                  progress_bar: List[float], time_span=25) -> Tuple[SimulationResults, pd.DataFrame, str]:
+                  progress_bar: List[float], time_span=1) -> Tuple[SimulationResults, pd.DataFrame, str]:
     """
     Run the simulation of various solar panel and battery combinations
-    :param params:
-    :param demand:
-    :param single_panel_production:
+
+    :param demand: DemandDf of pd.DataFrame(columns=['HourOfYear', '$(Year)'])
+    :param normalised_production: ProductionDf of pd.DataFrame(columns=['HourOfYear', 'SolarProduction'])
+        between 0 and 1
     :param simulated_year: int year to simulate
     :param solar_panel_power_it: iterator for different solar panels
     :param num_batteries_it: iterator for different battery sizes
+    :param strategy: function responsible for handling the cost
+    :param params: namedtuple simulation params
+    :param progress_bar: List reference used to update callee on percentage done.
+    :param time_span: time of which the system is expected to work
     :return: Tuple of the best combination of (number of solar panels, size of battery)
     """
     simulation_results = {SimulationResults.PowerSolar: [], SimulationResults.NumBatteries: [],
@@ -64,7 +70,7 @@ def run_scenarios(demand: DemandDf, single_panel_production: ProductionDf, simul
             simulation_results[SimulationResults.NumBatteries].append(num_batteries)
             simulation_results[SimulationResults.Cost].append(
                 simulate_use(demand=demand,
-                             normalised_production=single_panel_production,
+                             normalised_production=normalised_production,
                              params=params,
                              power_solar_panels=power_solar_panels,
                              num_batteries=num_batteries,

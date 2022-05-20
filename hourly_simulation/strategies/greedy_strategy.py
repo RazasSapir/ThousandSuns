@@ -9,23 +9,23 @@ from hourly_simulation.parameters import Params
 def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Params,
                         num_batteries: float) -> ElectricityUseDf:
     """
-    This is the implementation of the better use strategy - using the solar produced whenever possible,
-    then the stored energy and only then using gas power
-    note: this would be the perfect strategy if the price for gas power would be the same during all hours
+    This is the implementation of the greedy use strategy - using the solar produced whenever possible,
+    then the stored energy and only then using gas power. This Strategy does not include selling electricity
+    note: this would be the perfect strategy if the price for gas power would be the same during all hours.
+
+    :param demand: DemandDf: pd.DataFrame(columns=['HourOfYear', 'Demand'])
+    :param production: ProductionDf: pd.DataFrame(columns=['HourOfYear', 'SolarProduction'])
+    :param num_batteries: float number of batteries to simulate
     :param params: named tuple of parameters from parameters.csv
-    :param demand: DemandDf: pd.DataFrame(columns=[HourOfYear, 'Demand'])
-    :param production: ProductionDf: pd.DataFrame(columns=[HourOfYear, 'SolarProduction'])
-    :param num_batteries: number of batteries to simulate
-    :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
+    :return: ElectricityUseDf pd.DataFrame(columns=['HourOfYear', 'GasUsage', 'GasStored', 'SolarUsage', 'StoredUsage',
+                'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
     """
-    len_simulation = len(demand.df[demand.HourOfYear])
-    gas_usage_arr, solar_usage_arr, stored_usage_arr, solar_stored_arr, \
-    solar_lost_arr = __greedy_use_loop(len_simulation,
-                                       num_batteries * params.BATTERY_CAPACITY,
-                                       num_batteries * params.CHARGE_POWER,
-                                       params.BATTERY_EFFICIENCY,
-                                       demand.df[demand.Demand].to_numpy(),
-                                       production.df[production.SolarProduction].to_numpy())
+    gas_usage_arr, solar_usage_arr, stored_usage_arr, solar_stored_arr, solar_lost_arr = __greedy_use_loop(
+        num_batteries * params.BATTERY_CAPACITY,
+        num_batteries * params.CHARGE_POWER,
+        params.BATTERY_EFFICIENCY,
+        demand.df[demand.Demand].to_numpy(),
+        production.df[production.SolarProduction].to_numpy())
 
     hourly_use = ElectricityUseDf(pd.DataFrame())
     hourly_use.df[hourly_use.GasUsage] = gas_usage_arr
@@ -42,8 +42,22 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Para
 
 
 @jit
-def __greedy_use_loop(len_simulation, battery_capacity, battery_power, battery_efficiency, demand, production):
+def __greedy_use_loop(battery_capacity: float, battery_power: float, battery_efficiency: float, demand,
+                      production):
+    """
+    Helper function for the greedy_use_strategy using faster jit
+
+    :param battery_capacity: float Battery Capacity [Kwh]
+    :param battery_power: float battery max charging/discharging power limit [Kw]
+    :param battery_efficiency: float ratio of (Kwh available to discharge / Kwh charged)
+    :param demand: np array of DemandDf.df['Demand']
+    :param production: np array of ProductionDf.df['SolarProduction']
+    :return: Tuple of Five np.Array for each relevant colum in ElectricityUseDf: 'GasUsage', 'SolarUsage',
+            'StoredUsage', 'SolarStored', 'SolarLost',
+    """
     storage: float = 0
+    # define useful structures
+    len_simulation = len(demand)
     gas_usage_arr = np.zeros(len_simulation)
     solar_usage_arr = np.zeros(len_simulation)
     stored_usage_arr = np.zeros(len_simulation)

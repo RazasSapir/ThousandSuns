@@ -2,11 +2,18 @@ import pandas as pd
 
 
 class DataFrameWrapper:
+    """
+    DataFrameWrapper Object that hold data frames, isn't used directly, but inherited.
+    """
+
     def __init__(self, df: pd.DataFrame):
         self.df = df
 
 
 class InputDataFrameWrapper(DataFrameWrapper):
+    """
+    InputDataFrameWrapper object that hold "simulation input" pd.DataFrames all with 'HourOfYear' column
+    """
     HourOfYear = 'HourOfYear'
 
     def __init__(self, df: pd.DataFrame):
@@ -14,6 +21,9 @@ class InputDataFrameWrapper(DataFrameWrapper):
 
 
 class SimulationResults(DataFrameWrapper):
+    """
+    SimulationResults object that hold pd.DataFrame of 'Find Optimum' simulation results
+    """
     PowerSolar = 'PowerSolar'
     NumBatteries = 'NumBatteries'
     Cost = 'Cost'
@@ -23,6 +33,9 @@ class SimulationResults(DataFrameWrapper):
 
 
 class ElectricityUseDf(InputDataFrameWrapper):
+    """
+    ElectricityUseDf object that hold pd.DataFrame of  the results of the use strategy
+    """
     GasUsage = 'GasUsage'
     GasStored = 'GasStored'
     SolarUsage = 'SolarUsage'
@@ -47,6 +60,9 @@ class ElectricityUseDf(InputDataFrameWrapper):
 
 
 class DemandDf(InputDataFrameWrapper):
+    """
+    DemandDf object that hold pd.DataFrame of the electricity comsumption demand
+    """
     Demand = 'Demand'
 
     def __init__(self, df: pd.DataFrame):
@@ -55,6 +71,9 @@ class DemandDf(InputDataFrameWrapper):
 
 
 class ProductionDf(InputDataFrameWrapper):
+    """
+    ProductionDf object that hold pd.DataFrame of the PV solar production
+    """
     SolarProduction = 'SolarProduction'
 
     def __init__(self, df: pd.DataFrame):
@@ -62,6 +81,9 @@ class ProductionDf(InputDataFrameWrapper):
 
 
 class CostElectricityDf(InputDataFrameWrapper):
+    """
+    ProductionDf object that hold pd.DataFrame of the Electricity cost (buying and selling)
+    """
     Cost = "Cost ILS/Kwh"
 
     def __init__(self, df: pd.DataFrame):

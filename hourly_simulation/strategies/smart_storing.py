@@ -11,7 +11,8 @@ def smart_storing_strategy(demand: DemandDf, production: ProductionDf, cost_prof
     :param cost_profile: CostElectricityDf wrapper of pd.DataFrame with Cost and HourOfYear
     :param battery_capacity: float capacity of battery
     :param battery_power: power of the battery
-    :return: pd.DataFrame(columns=[HourOfYear, GasUsage, SolarUsage, StoredUsage, SolarStored, SolarLost])
+    :return: ElectricityUseDf pd.DataFrame(columns=['HourOfYear', 'GasUsage', 'GasStored', 'SolarUsage',
+        'StoredUsage', 'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
     """
     greedy_usage_df = greedy_strategy.greedy_use_strategy(demand, production, battery_capacity, battery_power).df
 
