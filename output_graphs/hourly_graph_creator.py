@@ -162,9 +162,9 @@ def normalize_battery(num, batteries_num, batteries_cap):
 
 
 def yearly_graph(yearly_stats: pd.DataFrame, batteries_num,
-                 batteries_cap, num_hours_to_sum=1):
+                 batteries_cap, demand: DemandDf, num_hours_to_sum=1):
     yearly_graph_fig(yearly_stats, batteries_num,
-                     batteries_cap, num_hours_to_sum).show()
+                     batteries_cap, demand, num_hours_to_sum).show()
 
 
 def daily_graph(daily_stats: pd.DataFrame):
