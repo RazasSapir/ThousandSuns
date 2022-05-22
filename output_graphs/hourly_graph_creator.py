@@ -9,17 +9,25 @@ from df_objects.df_objects import SimulationResults, DemandDf
 GAS_USAGE = 'GasUsage'
 SOLAR_USAGE = 'SolarUsage'
 STORED_USAGE = 'StoredUsage'
-SOLAR_STORED = 'SolarStored'
-SOLAR_LOST = 'SolarLost'
-
-STORED_STATE = 'StoredState'
 USAGE_SUM = 'UsageSum'
+
 SOLAR_SOLD = 'SolarSold'
 STORED_SOLD = 'StoredSold'
+
+STORED_CONSUMERS = [STORED_USAGE,
+                    STORED_SOLD]
+
+SOLAR_STORED = 'SolarStored'
 GAS_STORED = 'GasStored'
+STORED_STATE = 'StoredState'
+
+ENERGY_COLLECTORS = [SOLAR_STORED, GAS_STORED]
+
+SOLAR_LOST = 'SolarLost'
 
 yearly_stats_labels = [GAS_USAGE, SOLAR_USAGE, STORED_USAGE,
-                       SOLAR_STORED, SOLAR_LOST, STORED_SOLD, SOLAR_SOLD, GAS_STORED]
+                       SOLAR_STORED, SOLAR_LOST, STORED_SOLD,
+                       SOLAR_SOLD, GAS_STORED]
 
 names = {
     GAS_USAGE: 'Gas Based Electricity Consumption',
@@ -67,7 +75,8 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
     x = [f"{(i // HOURS_IN_DAY) + 1} ({i % HOURS_IN_DAY + 1})"
          for i in range(len(yearly_stats.index))]
 
-    yearly_stats = yearly_stats.groupby(yearly_stats.index // num_hours_to_sum).sum()
+    yearly_stats = yearly_stats.groupby(
+        yearly_stats.index // num_hours_to_sum).sum()
 
     # usage_sum = [solar + gas + stored for (solar, gas, stored) in zip(
     #     yearly_stats[SOLAR_USAGE],
@@ -87,8 +96,10 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
                        line=dict(width=WIDTH, color=colors[label]),
                        stackgroup=STACKGROUP_ONE)
         )
+
         battery_state_scatter = go.Scatter(
-            x=x, y=stored_state_stats(yearly_stats, batteries_num, batteries_cap),
+            x=x,
+            y=stored_state_stats(yearly_stats, batteries_num, batteries_cap),
             name=names[STORED_STATE],
             marker_color=colors[STORED_STATE],
             opacity=OPACITY,
@@ -116,22 +127,38 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
     return fig
 
 
-def normalize_battery(num, batteries_num, batteries_cap):
-    return (100 * num) / (batteries_num * batteries_cap)
-
-
 def stored_state_stats(yearly_stats, batteries_num, batteries_cap):
-    stored_state = [yearly_stats['SolarStored'][0] -
-                    yearly_stats['StoredUsage'][0]]
+    print(type(get_collection(0, yearly_stats)))
+    print(type(get_consumption(0, yearly_stats)))
+    stored_state = [get_collection(0, yearly_stats) - get_consumption(0, yearly_stats)]
     for i in range(1, len(yearly_stats.index)):
-        difference = yearly_stats['SolarStored'][i] - \
-                     yearly_stats['StoredUsage'][i]
+        difference = get_collection(i, yearly_stats) - get_consumption(i, yearly_stats)
         difference = normalize_battery(difference,
                                        batteries_num,
                                        batteries_cap)
         stored_state.append(stored_state[i - 1] + difference)
 
     return stored_state
+
+
+def get_consumption(index, yearly_stats):
+    consumption = 0
+    for consumer in STORED_CONSUMERS:
+        consumption += yearly_stats[consumer][index]
+        print(f"{type(consumption)}  cons")
+    return consumption
+
+
+def get_collection(index, yearly_stats):
+    collection = 0
+    for collector in ENERGY_COLLECTORS:
+        collection += yearly_stats[collector][index]
+        print(type(collection))
+    return collection
+
+
+def normalize_battery(num, batteries_num, batteries_cap):
+    return (100 * num) / (batteries_num * batteries_cap)
 
 
 def yearly_graph(yearly_stats: pd.DataFrame, batteries_num,
@@ -143,21 +170,29 @@ def yearly_graph(yearly_stats: pd.DataFrame, batteries_num,
 def daily_graph(daily_stats: pd.DataFrame):
     x = [i for i in range(1, 25)]
     fig = go.Figure()
-    fig.add_trace(go.Bar(x=x, y=daily_stats['GasUsage'], name='GasUsage', marker_color=colors['GasUsage'],
+    fig.add_trace(go.Bar(x=x, y=daily_stats['GasUsage'], name='GasUsage',
+                         marker_color=colors['GasUsage'],
                          opacity=0.85))
-    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarUsage'], name='SolarUsage', marker_color=colors['SolarUsage'],
+    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarUsage'], name='SolarUsage',
+                         marker_color=colors['SolarUsage'],
                          opacity=0.85))
-    fig.add_trace(go.Bar(x=x, y=daily_stats['StoredUsage'], name='StoredUsage', marker_color=colors['StoredUsage'],
+    fig.add_trace(go.Bar(x=x, y=daily_stats['StoredUsage'], name='StoredUsage',
+                         marker_color=colors['StoredUsage'],
                          opacity=0.85))
-    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarStored'], name='SolarStored', marker_color=colors['SolarStored'],
+    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarStored'], name='SolarStored',
+                         marker_color=colors['SolarStored'],
                          opacity=0.85))
-    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarLost'], name='SolarLost', marker_color=colors['SolarLost'],
+    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarLost'], name='SolarLost',
+                         marker_color=colors['SolarLost'],
                          opacity=0.85))
-    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarSold'], name='SolarSold', marker_color=colors['SolarSold'],
+    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarSold'], name='SolarSold',
+                         marker_color=colors['SolarSold'],
                          opacity=0.85))
-    fig.add_trace(go.Bar(x=x, y=daily_stats['GasStored'], name='GasStored', marker_color=colors['GasStored'],
+    fig.add_trace(go.Bar(x=x, y=daily_stats['GasStored'], name='GasStored',
+                         marker_color=colors['GasStored'],
                          opacity=0.85))
-    fig.add_trace(go.Bar(x=x, y=daily_stats['StoredSold'], name='StoredSold', marker_color=colors['StoredSold'],
+    fig.add_trace(go.Bar(x=x, y=daily_stats['StoredSold'], name='StoredSold',
+                         marker_color=colors['StoredSold'],
                          opacity=0.85))
     fig.update_layout(barmode='stack'
                       , title='Daily Usage'
@@ -166,7 +201,9 @@ def daily_graph(daily_stats: pd.DataFrame):
     fig.show()
 
 
-def simulation_graph(simulation_results: SimulationResults, solar_panel_power_it: Iterator, num_batteries_it: Iterator):
+def simulation_graph(simulation_results: SimulationResults,
+                     solar_panel_power_it: Iterator,
+                     num_batteries_it: Iterator):
     """
     Graphics of the whole simulation 3d graph + 2d contour of number of batteries and power of solar panels to scenario cost
     :param simulation_results: SimulationResults of pd.DataFrame ['PowerSolar', 'NumBatteries', 'Cost']
@@ -175,14 +212,18 @@ def simulation_graph(simulation_results: SimulationResults, solar_panel_power_it
     :return: plotly figure :)
     """
 
-    z = simulation_results.df[simulation_results.Cost].to_numpy().reshape(len(list(solar_panel_power_it)),
-                                                                          len(list(num_batteries_it)))
+    z = simulation_results.df[simulation_results.Cost].to_numpy().reshape(
+        len(list(solar_panel_power_it)),
+        len(list(num_batteries_it)))
 
-    fig = make_subplots(rows=1, cols=2, specs=[[{'type': 'scatter'}, {'type': 'scene'}]])
+    fig = make_subplots(rows=1, cols=2,
+                        specs=[[{'type': 'scatter'}, {'type': 'scene'}]])
 
     fig.add_traces(data=[
-        go.Contour(z=z, x=num_batteries_it, y=solar_panel_power_it, colorscale='Electric', showscale=False),
-        go.Surface(x=num_batteries_it, y=solar_panel_power_it, z=z, opacity=.8, colorscale='Electric',
+        go.Contour(z=z, x=num_batteries_it, y=solar_panel_power_it,
+                   colorscale='Electric', showscale=False),
+        go.Surface(x=num_batteries_it, y=solar_panel_power_it, z=z, opacity=.8,
+                   colorscale='Electric',
                    contours=dict(z=dict(show=True)))],
         rows=[1, 1], cols=[1, 2])
     fig.update_layout(scene=dict(
