@@ -44,7 +44,7 @@ def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_ca
     gas_usage_cost = electricity_use.df[electricity_use.GasUsage].to_numpy().dot(gas_cost_per_hour.to_numpy())
     # calculate gas stored price
     gas_stored_cost = electricity_use.df[electricity_use.GasStored].to_numpy().dot(gas_cost_per_hour.to_numpy())
-    total_gas_cost = gas_usage_cost + gas_stored_cost
+    total_gas_cost = gas_usage_cost + gas_stored_cost / params.BATTERY_EFFICIENCY
     # calculate solar selling income
     immediate_selling_income = electricity_use.df[electricity_use.SolarSold].to_numpy().dot(
         selling_income_per_hour.to_numpy())
