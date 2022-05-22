@@ -99,7 +99,7 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
                 day_use[ElectricityUseDf.StoredUsage][i] = stored_used
                 if expansive_sell_completion > 0:  # in case that the stored power won't last to the last expansive hour
                     stored_sell = min(sale_max_power - day_use[ElectricityUseDf.SolarSold][i], battery_power -
-                                      day_use[ElectricityUseDf.SolarSold][i], expansive_sell_completion)
+                                      day_use[ElectricityUseDf.StoredUsage][i], expansive_sell_completion)
                     expansive_sell_completion -= stored_sell
                 else:
                     stored_sell = 0
