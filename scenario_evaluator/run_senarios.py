@@ -10,7 +10,7 @@ from hourly_simulation.simulation import simulate_use
 
 
 def check_reached_edges_of_iterator(solar_panel_power_it: Iterator, num_batteries_it: Iterator,
-                                    optimal_power, optimal_num_batteries) -> str:
+                                    optimal_power, optimal_num_batteries) -> Tuple[bool, str]:
     """
     Checks whether the one of the optimal values reached the minimum / maximum of the iterator.
 
@@ -18,7 +18,7 @@ def check_reached_edges_of_iterator(solar_panel_power_it: Iterator, num_batterie
     :param num_batteries_it: iterator for different battery sizes
     :param optimal_power: simulated optimal solar power
     :param optimal_num_batteries: simulated optimal number of batteries
-    :return: String status of optimal combination in bounds.
+    :return: Tuple[is reached bounds?, String status of optimal combination in bounds].
     """
     results = ""
     if optimal_power == min(solar_panel_power_it):
@@ -38,13 +38,13 @@ def check_reached_edges_of_iterator(solar_panel_power_it: Iterator, num_batterie
         logging.warning(msg)
         results += msg + '\n'
     if not results:
-        return "Optimal Combination is in range"
-    return results
+        return False, "Optimal Combination is in range"
+    return True, results
 
 
 def run_scenarios(demand: DemandDf, normalised_production: ProductionDf, simulated_year: int,
                   solar_panel_power_it: Iterator, num_batteries_it: Iterator, strategy: Callable, params: Params,
-                  progress_bar: List[float], time_span=1) -> Tuple[SimulationResults, pd.DataFrame, str]:
+                  progress_bar: List[float], time_span=1) -> Tuple[SimulationResults, pd.DataFrame, Tuple[bool, str]]:
     """
     Run the simulation of various solar panel and battery combinations
 
