@@ -204,38 +204,38 @@ def yearly_graph(yearly_stats: pd.DataFrame, batteries_num,
                      batteries_cap, demand, num_hours_to_sum).show()
 
 
-# def daily_graph(daily_stats: pd.DataFrame):
-#     x = [i for i in range(1, 25)]
-#     fig = go.Figure()
-#     fig.add_trace(go.Bar(x=x, y=daily_stats['GasUsage'], name='GasUsage',
-#                          marker_color=COLORS['GasUsage'],
-#                          opacity=0.85))
-#     fig.add_trace(go.Bar(x=x, y=daily_stats['SolarUsage'], name='SolarUsage',
-#                          marker_color=COLORS['SolarUsage'],
-#                          opacity=0.85))
-#     fig.add_trace(go.Bar(x=x, y=daily_stats['StoredUsage'], name='StoredUsage',
-#                          marker_color=COLORS['StoredUsage'],
-#                          opacity=0.85))
-#     fig.add_trace(go.Bar(x=x, y=daily_stats['SolarStored'], name='SolarStored',
-#                          marker_color=COLORS['SolarStored'],
-#                          opacity=0.85))
-#     fig.add_trace(go.Bar(x=x, y=daily_stats['SolarLost'], name='SolarLost',
-#                          marker_color=COLORS['SolarLost'],
-#                          opacity=0.85))
-#     fig.add_trace(go.Bar(x=x, y=daily_stats['SolarSold'], name='SolarSold',
-#                          marker_color=COLORS['SolarSold'],
-#                          opacity=0.85))
-#     fig.add_trace(go.Bar(x=x, y=daily_stats['GasStored'], name='GasStored',
-#                          marker_color=COLORS['GasStored'],
-#                          opacity=0.85))
-#     fig.add_trace(go.Bar(x=x, y=daily_stats['StoredSold'], name='StoredSold',
-#                          marker_color=COLORS['StoredSold'],
-#                          opacity=0.85))
-#     fig.update_layout(barmode='stack'
-#                       , title='Daily Usage'
-#                       , xaxis_title='Hour in Day'
-#                       , yaxis_title='Usage (kWh)')
-#     fig.show()
+def daily_graph(daily_stats: pd.DataFrame):
+    x = [i for i in range(1, 25)]
+    fig = go.Figure()
+    fig.add_trace(go.Bar(x=x, y=daily_stats['GasUsage'], name='GasUsage',
+                         marker_color=COLORS['GasUsage'],
+                         opacity=0.85))
+    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarUsage'], name='SolarUsage',
+                         marker_color=COLORS['SolarUsage'],
+                         opacity=0.85))
+    fig.add_trace(go.Bar(x=x, y=daily_stats['StoredUsage'], name='StoredUsage',
+                         marker_color=COLORS['StoredUsage'],
+                         opacity=0.85))
+    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarStored'], name='SolarStored',
+                         marker_color=COLORS['SolarStored'],
+                         opacity=0.85))
+    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarLost'], name='SolarLost',
+                         marker_color=COLORS['SolarLost'],
+                         opacity=0.85))
+    fig.add_trace(go.Bar(x=x, y=daily_stats['SolarSold'], name='SolarSold',
+                         marker_color=COLORS['SolarSold'],
+                         opacity=0.85))
+    fig.add_trace(go.Bar(x=x, y=daily_stats['GasStored'], name='GasStored',
+                         marker_color=COLORS['GasStored'],
+                         opacity=0.85))
+    fig.add_trace(go.Bar(x=x, y=daily_stats['StoredSold'], name='StoredSold',
+                         marker_color=COLORS['StoredSold'],
+                         opacity=0.85))
+    fig.update_layout(barmode='stack'
+                      , title='Daily Usage'
+                      , xaxis_title='Hour in Day'
+                      , yaxis_title='Usage (kWh)')
+    fig.show()
 
 
 def simulation_graph(simulation_results: SimulationResults,
