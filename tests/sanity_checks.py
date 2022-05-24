@@ -124,10 +124,12 @@ def test_charge_power_not_passed(electricity_use: ElectricityUseDf, charge_power
     :param charge_power: the maximum charge power of the battery
     :return:
     """
-    assert (abs(charge_power -
-                electricity_use.df[electricity_use.SolarStored] -
+    assert (abs(electricity_use.df[electricity_use.SolarStored] +
                 electricity_use.df[
-                    electricity_use.StoredSold]) < epsilon).values.all(), "Charging power limit was passed"
+                    electricity_use.GasStored]) < charge_power + epsilon).values.all(), "Charging power limit was passed"
+    assert (abs(electricity_use.df[electricity_use.StoredSold] -
+                electricity_use.df[
+                    electricity_use.StoredUsage]) < charge_power + epsilon).values.all()
     logging.info("passed test_charge_power_not_passed")
 
 
@@ -140,8 +142,7 @@ def test_selling_limit_not_passed(electricity_use: ElectricityUseDf, selling_lim
     :param charge_power: the maximum charge power of the battery
     :return:
     """
-    assert (abs(selling_limit -
-                electricity_use.df[electricity_use.SolarSold] -
+    assert (abs(electricity_use.df[electricity_use.SolarSold] +
                 electricity_use.df[
-                    electricity_use.StoredSold]) < epsilon).values.all(), "Selling power limit was passed"
+                    electricity_use.StoredSold]) < selling_limit + epsilon).values.all(), "Selling power limit was passed"
     logging.info("passed test_selling_limit_not_passed")
