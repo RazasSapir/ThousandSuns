@@ -1,3 +1,6 @@
+import copy
+
+import numpy
 import numpy as np
 import pandas as pd
 from numba import jit
@@ -41,7 +44,7 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
 
     # Helpful definitions
     bin_cost = binary_cost_profile.df[binary_cost_profile.Cost].to_numpy()
-    production = production.df[production.SolarProduction].to_numpy()  # overwriting
+    production = copy.deepcopy(production.df[production.SolarProduction].to_numpy())  # overwriting
     demand = demand.df[demand.Demand].to_numpy()
     day_use = {c: np.zeros(len(demand)) for c in ElectricityUseDf.COLUMNS}
     total_stored = 0
