@@ -15,10 +15,9 @@ from scenario_evaluator.run_senarios import run_scenarios
 block_red = {"color": "red", 'display': 'block'}
 block_green = {"color": "green", 'display': 'block'}
 display_none = {'display': 'none'}
-output_text = lambda s1, s2, s3, s4: [html.P("Solar Panels: {:,} Kwh".format(s1)),
-                                      html.P(
-                                          "{:,} Batteries: Capacity: {:,} Kwh, Max Charge Power: {:,} Kw".format(s2, s3,
-                                                                                                                 s4))]
+output_text = lambda s1, s2, s3, s4: [html.P("Solar Panels: {:,} Mw".format(s1 / 1000)),
+                                      html.P("{:,} Batteries: Capacity: {:,} Mwh, Max Charge Power: {:,} Mw".format(
+                                          s2, s3 / 1000, s4 / 1000))]
 progress_bar = [0]
 
 
