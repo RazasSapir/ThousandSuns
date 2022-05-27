@@ -1,9 +1,7 @@
 import dash_bootstrap_components as dbc
 import numpy as np
 import pandas as pd
-import plotly.graph_objects as go
 from dash import dcc, html, Input, State, Output, callback
-from dash.exceptions import PreventUpdate
 
 from UI.UI_params import *
 from df_objects.df_objects import DemandDf, ProductionDf, SimulationResults
@@ -25,6 +23,20 @@ def get_layout():
     return html.Div([
         html.Div([
             html.H1("Find Optimum"),
+            dbc.Alert(
+                "Parameters Unfilled",
+                dismissable=True,
+                color="primary",
+                id="parameters_unfilled_optimum",
+                is_open=False,
+            ),
+            dbc.Alert(
+                "Parameters Error",
+                dismissable=True,
+                color="primary",
+                id="parameters_error_optimum",
+                is_open=False,
+            ),
             html.Table(style={"width": "100%"}, children=[
                 html.Tr([
                     html.Td(html.Table([
@@ -73,7 +85,6 @@ def get_layout():
                 ])
             ]),
             dbc.Button(id='run_simulation_button', children='Run Simulation', n_clicks=0),
-            html.H2("Input Error", id="input_error", style=display_none)
         ]),
         html.Br(),
         dcc.Interval(id='clock', interval=500, n_intervals=0, max_intervals=-1),
@@ -95,11 +106,12 @@ def progress_bar_update(n):
 
 
 @callback(
-    Output('optimal_graph', 'figure'),
-    Output('input_error', component_property='style'),
-    Output('best_combination', component_property="children"),
-    Output('reached_limits', component_property="children"),
-    Output('reached_limits', component_property="style"),
+    Output(component_id='optimal_graph', component_property='figure'),
+    Output(component_id='best_combination', component_property="children"),
+    Output(component_id='reached_limits', component_property="children"),
+    Output(component_id='reached_limits', component_property="style"),
+    Output(component_id='parameters_unfilled_optimum', component_property="is_open"),
+    Output(component_id='parameters_error_optimum', component_property="is_open"),
     Input(component_id='run_simulation_button', component_property="n_clicks"),
     State(component_id='number_batteries_min_range', component_property='value'),
     State(component_id='number_batteries_max_range', component_property='value'),
@@ -117,18 +129,18 @@ def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteri
     global progress_bar
     progress_bar = [0]
     if n_clicks == 0:
-        raise PreventUpdate()
+        return {}, "", "", {}, False, False
     try:
         solar_panel_power_it = np.linspace(float(pv_power_min), float(pv_power_max), int(pv_power_num))
         num_batteries_it = np.linspace(float(n_batteries_min), float(n_batteries_max), int(n_batteries_num))
         simulated_year = int(simulated_year)
         if not place_to_research or not chosen_strategy:
-            raise PreventUpdate
+            return {}, "", "", {}, True, False
         demand = DemandDf(pd.read_csv(os.path.join(SIMULATION_DEMAND_INPUT_PATH, place_to_research), index_col=0))
         normalised_panel_production = ProductionDf(NORMALISED_SOLAR_PRODUCTION.df.copy())
         wanted_simulation_params = Params(**get_simulation_parameters(PARAMS_PATH))
-    except (ValueError, IndexError) as e:
-        return go.Figure(), block_red, "", "", block_red
+    except Exception as e:
+        return {}, "", "", {}, False, True
 
     arguments = {'demand': demand,
                  'single_panel_production': normalised_panel_production,
@@ -146,11 +158,10 @@ def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteri
     return simulation_graph(simulation_results=simulation_results,
                             solar_panel_power_it=solar_panel_power_it,
                             num_batteries_it=num_batteries_it), \
-           display_none, \
            output_text(round(best_combination[SimulationResults.PowerSolar]),
                        round(best_combination[SimulationResults.NumBatteries], 2),
                        round(best_combination[SimulationResults.NumBatteries] *
                              wanted_simulation_params.BATTERY_CAPACITY),
                        round(best_combination[SimulationResults.NumBatteries] *
                              wanted_simulation_params.CHARGE_POWER)), \
-           in_bounds[1], block_red if in_bounds[0] else block_green
+           in_bounds[1], block_red if in_bounds[0] else block_green, False, False

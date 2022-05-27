@@ -1,6 +1,5 @@
 import copy
 
-import numpy
 import numpy as np
 import pandas as pd
 from numba import jit
@@ -82,11 +81,11 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
                 total_stored += storing * battery_efficiency  # when using battery, some power disappears
                 day_use[ElectricityUseDf.SolarStored][i] = storing * battery_efficiency
                 day_use[ElectricityUseDf.SolarLost][i] = storing * (1 - battery_efficiency)
-                print(f"before production [{hour_index+1}] = {production[i]}", end="   ")
-                print(f"and storing is {storing}", end="    ")
-                print(f"{production[i]} => {production[i]} - {storing}", end="   ")
+                # print(f"before production [{hour_index+1}] = {production[i]}", end="   ")
+                # print(f"and storing is {storing}", end="    ")
+                # print(f"{production[i]} => {production[i]} - {storing}", end="   ")
                 production[i] = production[i] - storing
-                print(f"after production [{hour_index + 1}] = {production[i]}")
+                # print(f"after production [{hour_index + 1}] = {production[i]}")
 
             is_buying_profitable = get_is_buying_profitable(battery_efficiency, binary_cost_profile, cost_profile,
                                                             sell_profile)
