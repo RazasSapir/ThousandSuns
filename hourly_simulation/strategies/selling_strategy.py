@@ -2,7 +2,6 @@ import copy
 
 import numpy as np
 import pandas as pd
-from numba import jit
 
 from df_objects.df_objects import DemandDf, ProductionDf, ElectricityUseDf, CostElectricityDf
 from hourly_simulation.parameters import Params, SELLING_COST, BINARY_SELLING_COST, BUY_COST
@@ -10,7 +9,6 @@ from hourly_simulation.parameters import Params, SELLING_COST, BINARY_SELLING_CO
 
 # todo: add documentation
 
-@jit
 def get_index(day_index: int, hour_index: int):
     return day_index * 24 + hour_index
 

@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from numba import jit
 
 from df_objects.df_objects import DemandDf, ProductionDf, ElectricityUseDf
 from hourly_simulation.parameters import Params
@@ -41,7 +40,6 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Para
     return hourly_use
 
 
-@jit
 def __greedy_use_loop(battery_capacity: float, battery_power: float, battery_efficiency: float, demand,
                       production):
     """

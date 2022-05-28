@@ -30,4 +30,4 @@ def display_page(pathname):
 
 
 def main():
-    app.run_server(host="0.0.0.0", debug=True)
+    app.run_server(host='0.0.0.0', port=8080, debug=False, use_reloader=False)

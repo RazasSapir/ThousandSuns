@@ -1,7 +1,13 @@
 pandas~=1.3.4
 numpy~=1.21.5
-plotly~=5.7.0
+plotly~=5.8.0
 dash~=2.3.1
 dash_bootstrap_components~=1.1.0
-numba~=0.55.1
 tqdm~=4.64.0
+
+
+dash-core-components
+dash-html-components
+cx_Freeze
+cx_Logging
+waitress

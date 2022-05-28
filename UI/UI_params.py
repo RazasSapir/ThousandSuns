@@ -1,7 +1,11 @@
+import logging
 import os.path
 
 SIMULATION_DEMAND_INPUT_PATH = r"data/simulation_demand_input"
-demand_files = os.listdir(SIMULATION_DEMAND_INPUT_PATH)
+if os.path.isdir(SIMULATION_DEMAND_INPUT_PATH):
+    demand_files = os.listdir(SIMULATION_DEMAND_INPUT_PATH)
+else:
+    logging.error("Could Not Found: " + os.getcwd() + "/" + SIMULATION_DEMAND_INPUT_PATH)
 
 ASSETS_FOLDER = r"UI/assets"
 MADOR_LOGO = r"MadorLogo.png"

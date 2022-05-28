@@ -7,7 +7,7 @@ import pandas as pd
 from df_objects.df_objects import CostElectricityDf, ProductionDf
 
 # Non changing Params
-PARAMS_PATH = "hourly_simulation/parameters.csv"
+PARAMS_PATH = "data/parameters.csv"
 
 
 def get_simulation_parameters(csv_path, with_units=False) -> Dict:
