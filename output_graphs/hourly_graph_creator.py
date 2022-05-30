@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
 from df_objects.df_objects import SimulationResults, DemandDf
+from hourly_simulation.parameters import Params, get_simulation_parameters, PARAMS_PATH
 
 GAS_USAGE = 'GasUsage'
 SOLAR_USAGE = 'SolarUsage'
@@ -56,6 +57,7 @@ COLORS = {
     STORED_SOLD: '#0dc014'
 }
 
+HIDE_BATTERY_EFFICIENCY_LOSS = False
 OPACITY = 0.85
 HOVERINFO = 'x+y'
 LINES = 'lines'
@@ -79,7 +81,10 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
                      num_hours_to_sum=1):
     x = [f"{(i // HOURS_IN_DAY) + 1} ({i % HOURS_IN_DAY + 1})"
          for i in range(len(yearly_stats.index))]
-
+    wanted_simulation_params = Params(**get_simulation_parameters(PARAMS_PATH))
+    batter_eff = wanted_simulation_params.BATTERY_EFFICIENCY
+    if HIDE_BATTERY_EFFICIENCY_LOSS:
+        yearly_stats[SOLAR_LOST] -= (1 - batter_eff) * yearly_stats[SOLAR_STORED] / batter_eff
     yearly_stats = yearly_stats.groupby(
         yearly_stats.index // num_hours_to_sum).sum()
 
