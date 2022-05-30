@@ -1,3 +1,5 @@
+from multiprocessing.pool import ThreadPool
+
 import dash_bootstrap_components as dbc
 import numpy as np
 import pandas as pd
@@ -151,10 +153,11 @@ def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteri
                  'params': wanted_simulation_params,
                  'progress_bar': progress_bar,
                  'time_span': int(time_span_input)}
-    import concurrent.futures
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        future = executor.submit(run_scenarios, *list(arguments.values()))
-        simulation_results, best_combination, in_bounds = future.result()
+
+    pool = ThreadPool(processes=1)
+    async_result = pool.apply_async(run_scenarios, tuple(arguments.values()))  # tuple of args for foo
+    simulation_results, best_combination, in_bounds = async_result.get()
+
     return simulation_graph(simulation_results=simulation_results,
                             solar_panel_power_it=solar_panel_power_it,
                             num_batteries_it=num_batteries_it), \
