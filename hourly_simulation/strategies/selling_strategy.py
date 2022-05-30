@@ -79,7 +79,7 @@ def day_with_expansive_hours(expensive_hours, day_index, demand, production, day
                                           day_index,
                                           battery_power, day_use)
     total_stored = fill_expansive_hours(expensive_hours, day_index, demand, battery_power, day_use,
-                                        total_stored, expansive_use_completion, sale_max_power)
+                                        total_stored, expansive_use_completion, sale_max_power, sell_profile)
     fill_cheap_hours(cheap_hours, day_index, production, demand, sale_max_power, day_use)
     return total_stored
 
@@ -131,10 +131,9 @@ def buy_in_cheap_hours(battery_capacity, expansive_completion, expensive_hours, 
     return total_stored
 
 
-def fill_expansive_hours(expensive_hours, day_index, demand, battery_power, day_use, total_stored, expansive_use_completion, sale_max_power):
+def fill_expansive_hours(expensive_hours, day_index, demand, battery_power, day_use, total_stored, expansive_use_completion, sale_max_power, sell_profile):
     expansive_sell_completion = total_stored - expansive_use_completion
-    for hour_index in expensive_hours:
-        i = get_index(day_index, hour_index)
+    for i in ordered_hours(expensive_hours, sell_profile, day_index):
         stored_used = min(demand[i], battery_power - day_use[ElectricityUseDf.SolarSold][i], total_stored)
         total_stored -= stored_used
         day_use[ElectricityUseDf.StoredUsage][i] = stored_used
@@ -203,6 +202,14 @@ def combine_to_df(day_use, sell_profile):
     return hourly_use
 
 
-def ordered_hours(hours, sell_profile):
+def ordered_hours(hours, sell_profile, day_index):
+    daily_sell_profile = [sell_profile.df[sell_profile.Cost].loc[get_index(day_index, i)] for i in hours]
+    print(f"day = {day_index}, unordered indices = {hours}", end="   ")
+    print(f"ordered indices = {[val for _, val in sorted(zip(daily_sell_profile, hours))]}")
+    ordered_hours = [val for _, val in sorted(zip(daily_sell_profile, hours))]
+    return [get_index(day_index, i) for i in ordered_hours]
+
+
+
 
 
