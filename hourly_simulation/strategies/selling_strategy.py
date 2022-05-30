@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from df_objects.df_objects import DemandDf, ProductionDf, ElectricityUseDf, CostElectricityDf
-from hourly_simulation.parameters import Params, SELLING_COST, BINARY_SELLING_COST, BUY_COST
+from hourly_simulation.parameters import Params, ELECTRICITY_COST, BINARY_SELLING_COST, ELECTRICITY_SELLING_INCOME
 
 
 # todo: add documentation
@@ -15,9 +15,9 @@ def get_index(day_index: int, hour_index: int):
 
 def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Params, number_of_batteries,
                            binary_cost_profile:
-                           CostElectricityDf = BINARY_SELLING_COST, cost_profile: CostElectricityDf = SELLING_COST,
+                           CostElectricityDf = BINARY_SELLING_COST, cost_profile: CostElectricityDf = ELECTRICITY_COST,
                            sell_profile:
-                           CostElectricityDf = BUY_COST) -> ElectricityUseDf:
+                           CostElectricityDf = ELECTRICITY_SELLING_INCOME) -> ElectricityUseDf:
     """
         Given a matching rect cost and sell function
         :param demand: DemandDf: pd.DataFrame(columns=[HourOfYear, 'Demand'])
@@ -67,7 +67,7 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
                 expansive_completion += min(demand[i] + sale_max_power - solar_sold,
                                             battery_power)  # to buy in cheap hours later
                 expansive_use_completion += min(demand[i], battery_power)
-            # Storing over production
+            # Storing over production during the cheap hours
             for hour_index in range(expensive_hours[0] - 1, -1, -1):
                 if total_stored >= battery_capacity:  # trying to fill the battery
                     break
@@ -85,8 +85,8 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
                 production[i] = production[i] - storing
                 # print(f"after production [{hour_index + 1}] = {production[i]}")
 
-            is_buying_profitable = get_is_buying_profitable(battery_efficiency, binary_cost_profile, cost_profile,
-                                                            sell_profile)
+            is_buying_profitable = get_is_buying_profitable(battery_efficiency, binary_cost_profile,
+            get_index(day_index, cheap_hours[0]), get_index(day_index, expensive_hours[0]), cost_profile, sell_profile)
             if is_buying_profitable:
                 effective_battery_capacity = min(battery_capacity, expansive_completion)
                 for hour_index in range(expensive_hours[0] - 1, -1, -1):
@@ -157,9 +157,14 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
     return hourly_use
 
 
-def get_is_buying_profitable(battery_efficiency, binary_cost_profile, cost_profile, sell_profile):
-    low_index = binary_cost_profile.df.loc[binary_cost_profile.df[binary_cost_profile.Cost] == 0].index.tolist()[0]
-    peak_index = binary_cost_profile.df.loc[binary_cost_profile.df[binary_cost_profile.Cost] == 1].index.tolist()[0]
+def get_is_buying_profitable(battery_efficiency, binary_cost_profile, low_index, peak_index,  cost_profile, sell_profile):
+    # low_index = binary_cost_profile.df.loc[binary_cost_profile.df[binary_cost_profile.Cost] == 0].index.tolist()[0]
+    # peak_index = binary_cost_profile.df.loc[binary_cost_profile.df[binary_cost_profile.Cost] == 1].index.tolist()[0]
     low_buy_price = cost_profile.df[cost_profile.Cost].loc[low_index]
     peak_sell_price = sell_profile.df[sell_profile.Cost].loc[peak_index]
-    return low_buy_price * battery_efficiency < peak_sell_price
+    print(f"low buy index = {low_index}, peak index = {peak_index}", end="    ")
+    print(f"{low_buy_price}  < {peak_sell_price} * {battery_efficiency} is {low_buy_price < peak_sell_price * battery_efficiency}")
+    return low_buy_price  < peak_sell_price * battery_efficiency
+
+def buying_profitable_indices():
+    pass
