@@ -21,7 +21,7 @@ def get_layout():
         html.Div([
             html.H1("Annual Simulation"),
             dbc.Alert(
-                "Parameters Unfilled",
+                "Parameters Problem - Unfilled / Illegal",
                 dismissable=True,
                 color="primary",
                 id="parameters_alert_annual",
@@ -88,10 +88,14 @@ def run_simulation(n_clicks, num_batteries, solar_panel_power_kw, simulated_year
     global last_simulation_results
     if n_clicks == 0:
         return {}, False
-    solar_panel_power_kw = float(solar_panel_power_kw)
-    num_batteries = float(num_batteries)
-    simulated_year = int(simulated_year)
-    if not place_to_research or not chosen_strategy:
+    try:
+        solar_panel_power_kw = float(solar_panel_power_kw)
+        num_batteries = float(num_batteries)
+        simulated_year = int(simulated_year)
+    except:
+        return {}, True
+    if (not place_to_research) or (
+    not chosen_strategy) or solar_panel_power_kw < 0 or num_batteries < 0 or simulated_year < 0:
         return {}, True
     demand = DemandDf(pd.read_csv(os.path.join(SIMULATION_DEMAND_INPUT_PATH, place_to_research), index_col=0))
     normalised_production = ProductionDf(NORMALISED_SOLAR_PRODUCTION.df.copy())

@@ -133,10 +133,13 @@ def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteri
     if n_clicks == 0:
         return {}, "", "", {}, False, False
     try:
+        if float(pv_power_min) < 0 or float(pv_power_max) < 0 or int(pv_power_num) < 0 or \
+                float(n_batteries_min) < 0 or float(n_batteries_max) < 0 or int(n_batteries_num) < 0:
+            return {}, "", "", {}, True, False
         solar_panel_power_it = np.linspace(float(pv_power_min), float(pv_power_max), int(pv_power_num))
         num_batteries_it = np.linspace(float(n_batteries_min), float(n_batteries_max), int(n_batteries_num))
         simulated_year = int(simulated_year)
-        if not place_to_research or not chosen_strategy:
+        if not place_to_research or not chosen_strategy or simulated_year < 0:
             return {}, "", "", {}, True, False
         demand = DemandDf(pd.read_csv(os.path.join(SIMULATION_DEMAND_INPUT_PATH, place_to_research), index_col=0))
         normalised_panel_production = ProductionDf(NORMALISED_SOLAR_PRODUCTION.df.copy())
