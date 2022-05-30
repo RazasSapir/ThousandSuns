@@ -145,6 +145,11 @@ pip-selfcheck.json
 ## File-based project format:
 *.iws
 
+# Executables
+*.exe
+*.dll
+
+
 ## Plugin-specific files:
 
 # IntelliJ

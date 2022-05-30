@@ -35,14 +35,12 @@ simulation_params = Params(**__simulation_params_dict)
 
 # Electricity
 
-ELECTRICITY_COST_PATH = 'data/electricity_cost.csv'
+ELECTRICITY_COST_PATH = 'data/electricity_cost2.csv'
+ELECTRICITY_COST_BINARY_PATH = 'data/electricity_cost_binary2.csv'
 ELECTRICITY_SELLING_INCOME_PATH = 'data/electricity_sell_income.csv'
-ELECTRICITY_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_PATH))  # ILS per Kw
+ELECTRICITY_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_PATH, index_col=0))
 ELECTRICITY_SELLING_INCOME = CostElectricityDf(pd.read_csv(ELECTRICITY_SELLING_INCOME_PATH))  # ILS per Kw
-SELLING_COST = CostElectricityDf(pd.read_csv(r'data/electricity_cost.csv', index_col=0))
-BINARY_SELLING_COST = CostElectricityDf(pd.read_csv(r'data/electricity_cost_binary.csv', index_col=0))
-BUY_COST = CostElectricityDf(SELLING_COST.df.copy())
-BUY_COST.df[BUY_COST.Cost] = BUY_COST.df[BUY_COST.Cost] * simulation_params.BATTERY_EFFICIENCY
+BINARY_SELLING_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_BINARY_PATH, index_col=0))
 
 # Solar Panels
 NATIONAL_SOLAR_PRODUCTION_PATH = 'data/national_solar_production.csv'

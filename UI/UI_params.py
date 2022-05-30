@@ -8,6 +8,9 @@ else:
     logging.error("Could Not Found: " + os.getcwd() + "/" + SIMULATION_DEMAND_INPUT_PATH)
 
 ASSETS_FOLDER = r"UI/assets"
+if not os.path.isdir(ASSETS_FOLDER):
+    ASSETS_FOLDER = r"Lib/UI/assets"
+
 MADOR_LOGO = r"MadorLogo.png"
 TALPIOT_LOGO = r"TalpiotLogo.png"
 
