@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 from df_objects.df_objects import DemandDf, ProductionDf, ElectricityUseDf, CostElectricityDf
-from hourly_simulation.parameters import Params, SELLING_COST, BINARY_SELLING_COST, BUY_COST
+from hourly_simulation.parameters import Params, ELECTRICITY_COST, BINARY_SELLING_COST, ELECTRICITY_SELLING_INCOME
 
 
 # todo: add documentation
@@ -15,9 +15,9 @@ def get_index(day_index: int, hour_index: int):
 
 def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Params, number_of_batteries,
                            binary_cost_profile:
-                           CostElectricityDf = BINARY_SELLING_COST, cost_profile: CostElectricityDf = SELLING_COST,
+                           CostElectricityDf = BINARY_SELLING_COST, cost_profile: CostElectricityDf = ELECTRICITY_COST,
                            sell_profile:
-                           CostElectricityDf = BUY_COST) -> ElectricityUseDf:
+                           CostElectricityDf = ELECTRICITY_SELLING_INCOME) -> ElectricityUseDf:
     """
         Given a matching rect cost and sell function
         :param demand: DemandDf: pd.DataFrame(columns=[HourOfYear, 'Demand'])
