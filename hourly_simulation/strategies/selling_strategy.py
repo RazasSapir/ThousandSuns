@@ -32,9 +32,9 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
     len_simulation = len(demand.df[demand.HourOfYear])
     if not len_simulation % 24 == 0:
         raise ValueError("Length of input should be a whole number of days")
-    sale_max_power = param.MAX_SELLING_POWER
-    battery_power = param.CHARGE_POWER * number_of_batteries
-    battery_capacity = param.BATTERY_CAPACITY * number_of_batteries
+    sale_max_power = param.MAX_SELLING_POWER * 1000
+    battery_power = param.CHARGE_POWER * number_of_batteries * 1000
+    battery_capacity = param.BATTERY_CAPACITY * number_of_batteries * 1000
     battery_efficiency = param.BATTERY_EFFICIENCY
     # Helpful definitions
     bin_cost = binary_cost_profile.df[binary_cost_profile.Cost].to_numpy()
@@ -161,6 +161,7 @@ def fill_cheap_hours(cheap_hours, day_index, production, demand, sale_max_power,
 
 
 def no_expansive_hours_day(demand, production, day_index, battery_capacity, total_stored, sale_max_power, battery_efficiency, battery_power, day_use):
+    print(f"{day_index} has no expansive hours")
     for i in range(day_index * 24, (day_index + 1) * 24):
         needed_power = demand[i]
         solar_used = min(production[i], needed_power)
@@ -204,8 +205,8 @@ def combine_to_df(day_use, sell_profile):
 
 def ordered_hours(hours, sell_profile, day_index):
     daily_sell_profile = [sell_profile.df[sell_profile.Cost].loc[get_index(day_index, i)] for i in hours]
-    print(f"day = {day_index}, unordered indices = {hours}", end="   ")
-    print(f"ordered indices = {[val for _, val in sorted(zip(daily_sell_profile, hours))]}")
+    # print(f"day = {day_index}, unordered indices = {hours}", end="   ")
+    # print(f"ordered indices = {[val for _, val in sorted(zip(daily_sell_profile, hours))]}")
     ordered_hours = [val for _, val in sorted(zip(daily_sell_profile, hours))]
     return [get_index(day_index, i) for i in ordered_hours]
 
