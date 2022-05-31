@@ -32,9 +32,9 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
     len_simulation = len(demand.df[demand.HourOfYear])
     if not len_simulation % 24 == 0:
         raise ValueError("Length of input should be a whole number of days")
-    sale_max_power = param.MAX_SELLING_POWER * 1000 *
-    battery_power = param.CHARGE_POWER * number_of_batteries * 1000
-    battery_capacity = param.BATTERY_CAPACITY * number_of_batteries * 1000
+    sale_max_power = param.MAX_SELLING_POWER * 1000 * param.BATTERY_EFFECTIVE_SIZE
+    battery_power = param.CHARGE_POWER * number_of_batteries * 1000 * param.BATTERY_EFFECTIVE_SIZE
+    battery_capacity = param.BATTERY_CAPACITY * number_of_batteries * 1000 * param.BATTERY_EFFECTIVE_SIZE
     battery_efficiency = param.BATTERY_EFFICIENCY
     # Helpful definitions
     bin_cost = binary_cost_profile.df[binary_cost_profile.Cost].to_numpy()
