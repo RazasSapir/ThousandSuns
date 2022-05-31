@@ -23,9 +23,9 @@ def get_simulation_parameters(csv_path, with_units=False) -> Dict:
         reader = csv.reader(csvfile, delimiter=',')
         for row in reader:
             if with_units:
-                params[row[0]] = (float(row[1]), row[2])
+                params[row[0].strip()] = (float(row[1]), row[2])
             else:
-                params[row[0]] = float(row[1])
+                params[row[0].strip()] = float(row[1])
     return params
 
 
