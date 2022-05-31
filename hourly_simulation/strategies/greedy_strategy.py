@@ -20,8 +20,8 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Para
                 'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
     """
     gas_usage_arr, solar_usage_arr, stored_usage_arr, solar_stored_arr, solar_lost_arr = __greedy_use_loop(
-        num_batteries * params.BATTERY_CAPACITY,
-        num_batteries * params.CHARGE_POWER,
+        num_batteries * params.BATTERY_CAPACITY * 1000,
+        num_batteries * params.CHARGE_POWER * 1000,
         params.BATTERY_EFFICIENCY,
         demand.df[demand.Demand].to_numpy(),
         production.df[production.SolarProduction].to_numpy())
@@ -40,13 +40,13 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Para
     return hourly_use
 
 
-def __greedy_use_loop(battery_capacity: float, battery_power: float, battery_efficiency: float, demand,
+def __greedy_use_loop(battery_capacity_kwh: float, battery_power_kw: float, battery_efficiency: float, demand,
                       production):
     """
     Helper function for the greedy_use_strategy using faster jit
 
-    :param battery_capacity: float Battery Capacity [Kwh]
-    :param battery_power: float battery max charging/discharging power limit [Kw]
+    :param battery_capacity_kwh: float Battery Capacity [Kwh]
+    :param battery_power_kw: float battery max charging/discharging power limit [Kw]
     :param battery_efficiency: float ratio of (Kwh available to discharge / Kwh charged)
     :param demand: np array of DemandDf.df['Demand']
     :param production: np array of ProductionDf.df['SolarProduction']
@@ -66,13 +66,13 @@ def __greedy_use_loop(battery_capacity: float, battery_power: float, battery_eff
         solar_used = min(production[i], needed_power)
         solar_usage_arr[i] = solar_used
         needed_power -= solar_used
-        solar_stored = min(production[i] - solar_used, battery_capacity - storage,
-                           battery_power) * battery_efficiency
+        solar_stored = min(production[i] - solar_used, battery_capacity_kwh - storage,
+                           battery_power_kw) * battery_efficiency
         solar_stored_arr[i] = solar_stored
         storage += solar_stored
         solar_lost = production[i] - solar_used - solar_stored
         solar_lost_arr[i] = solar_lost
-        stored_used = min(min(storage, needed_power), battery_power)
+        stored_used = min(min(storage, needed_power), battery_power_kw)
         stored_usage_arr[i] = stored_used
         storage -= stored_used
         needed_power -= stored_used
