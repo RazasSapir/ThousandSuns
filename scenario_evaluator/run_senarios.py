@@ -14,7 +14,7 @@ def check_reached_edges_of_iterator(solar_panel_power_it_mw: Iterator, num_batte
     """
     Checks whether the one of the optimal values reached the minimum / maximum of the iterator.
 
-    :param solar_panel_power_it: iterator for different solar panels
+    :param solar_panel_power_it_mw: iterator for different solar panels
     :param num_batteries_it: iterator for different battery sizes
     :param optimal_power: simulated optimal solar power
     :param optimal_num_batteries: simulated optimal number of batteries
