@@ -159,11 +159,11 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
                      row=BATTERY_PLOT_POSITION[0],
                      col=BATTERY_PLOT_POSITION[1]
                      )
-    fig.update_yaxes(title_text="kWh",
+    fig.update_yaxes(title_text="mWh",
                      row=BUY_SELL_PLOT_POSITION[0],
                      col=BUY_SELL_PLOT_POSITION[1]
                      )
-    fig.update_yaxes(title_text="kWh",
+    fig.update_yaxes(title_text="mWh",
                      row=USAGE_PRODUCTION_PLOT_POSITION[0],
                      col=USAGE_PRODUCTION_PLOT_POSITION[1]
                      )
@@ -239,7 +239,7 @@ def daily_graph(daily_stats: pd.DataFrame):
     fig.update_layout(barmode='stack'
                       , title='Daily Usage'
                       , xaxis_title='Hour in Day'
-                      , yaxis_title='Usage (kWh)')
+                      , yaxis_title='Usage (mWh)')
     fig.show()
 
 

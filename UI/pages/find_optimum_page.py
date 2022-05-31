@@ -15,9 +15,9 @@ from scenario_evaluator.run_senarios import run_scenarios
 block_red = {"color": "red", 'display': 'block'}
 block_green = {"color": "green", 'display': 'block'}
 display_none = {'display': 'none'}
-output_text = lambda s1, s2, s3, s4: [html.P("Solar Panels: {:,} Mw".format(s1 / 1000)),
+output_text = lambda s1, s2, s3, s4: [html.P("Solar Panels: {:,} Mw".format(s1)),
                                       html.P("{:,} Batteries: Capacity: {:,} Mwh, Max Charge Power: {:,} Mw".format(
-                                          s2, s3 / 1000, s4 / 1000))]
+                                          s2, s3, s4))]
 progress_bar = [0]
 
 
@@ -72,16 +72,16 @@ def get_layout():
                         ])])),
                     html.Td(html.Table([
                         html.Tr([
-                            html.Td("Solar panel max KW Range:"), ]),
+                            html.Td("Solar panel max MW Range:"), ]),
                         html.Tr([
                             html.Td("From:"),
-                            html.Td(dbc.Input(id='solar_panel_power_kw_min_range', value='6000', type='number'))]),
+                            html.Td(dbc.Input(id='solar_panel_power_mw_min_range', value='6', type='number'))]),
                         html.Tr([
                             html.Td("To:"),
-                            html.Td(dbc.Input(id='solar_panel_power_kw_max_range', value='8000', type='number'))]),
+                            html.Td(dbc.Input(id='solar_panel_power_mw_max_range', value='8', type='number'))]),
                         html.Tr([
                             html.Td("Points:"),
-                            html.Td(dbc.Input(id='solar_panel_power_kw_num_range', value='10', type='number')),
+                            html.Td(dbc.Input(id='solar_panel_power_mw_num_range', value='10', type='number')),
                         ]),
                     ])),
                 ])
@@ -118,9 +118,9 @@ def progress_bar_update(n):
     State(component_id='number_batteries_min_range', component_property='value'),
     State(component_id='number_batteries_max_range', component_property='value'),
     State(component_id='number_batteries_num_range', component_property='value'),
-    State(component_id='solar_panel_power_kw_min_range', component_property='value'),
-    State(component_id='solar_panel_power_kw_max_range', component_property='value'),
-    State(component_id='solar_panel_power_kw_num_range', component_property='value'),
+    State(component_id='solar_panel_power_mw_min_range', component_property='value'),
+    State(component_id='solar_panel_power_mw_max_range', component_property='value'),
+    State(component_id='solar_panel_power_mw_num_range', component_property='value'),
     State(component_id='year_to_simulate', component_property='value'),
     State(component_id='use_strategy', component_property='value'),
     State(component_id='place_to_research', component_property='value'),
@@ -136,7 +136,7 @@ def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteri
         if float(pv_power_min) < 0 or float(pv_power_max) < 0 or int(pv_power_num) < 0 or \
                 float(n_batteries_min) < 0 or float(n_batteries_max) < 0 or int(n_batteries_num) < 0:
             return {}, "", "", {}, True, False
-        solar_panel_power_it = np.linspace(float(pv_power_min), float(pv_power_max), int(pv_power_num))
+        solar_panel_power_it_mw = np.linspace(float(pv_power_min), float(pv_power_max), int(pv_power_num))
         num_batteries_it = np.linspace(float(n_batteries_min), float(n_batteries_max), int(n_batteries_num))
         simulated_year = int(simulated_year)
         if not place_to_research or not chosen_strategy or simulated_year < 0:
@@ -150,7 +150,7 @@ def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteri
     arguments = {'demand': demand,
                  'single_panel_production': normalised_panel_production,
                  'simulated_year': simulated_year,
-                 'solar_panel_power_it': solar_panel_power_it,
+                 'solar_panel_power_it_mw': solar_panel_power_it_mw,
                  'num_batteries_it': num_batteries_it,
                  'strategy': use_strategies[chosen_strategy],
                  'params': wanted_simulation_params,
@@ -162,7 +162,7 @@ def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteri
     simulation_results, best_combination, in_bounds = async_result.get()
 
     return simulation_graph(simulation_results=simulation_results,
-                            solar_panel_power_it=solar_panel_power_it,
+                            solar_panel_power_it=solar_panel_power_it_mw,
                             num_batteries_it=num_batteries_it), \
            output_text(round(best_combination[SimulationResults.PowerSolar]),
                        round(best_combination[SimulationResults.NumBatteries], 2),
