@@ -53,9 +53,6 @@ def get_layout():
                         html.Tr([
                             html.Td("Use Strategy: "),
                             html.Td(dcc.Dropdown(list(use_strategies.keys()), id='use_strategy'))]),
-                        html.Tr([
-                            html.Td("Time Span [Years]: "),
-                            html.Td(dbc.Input(id='time_span_input', value='25', type='number'))])
                     ])),
                     html.Td(html.Table([
                         html.Tr([
@@ -124,10 +121,9 @@ def progress_bar_update(n):
     State(component_id='year_to_simulate', component_property='value'),
     State(component_id='use_strategy', component_property='value'),
     State(component_id='place_to_research', component_property='value'),
-    State(component_id='time_span_input', component_property='value'),
 )
 def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteries_num, pv_power_min, pv_power_max,
-                           pv_power_num, simulated_year, chosen_strategy, place_to_research, time_span_input):
+                           pv_power_num, simulated_year, chosen_strategy, place_to_research):
     global progress_bar
     progress_bar = [0]
     if n_clicks == 0:
@@ -154,8 +150,7 @@ def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteri
                  'num_batteries_it': num_batteries_it,
                  'strategy': use_strategies[chosen_strategy],
                  'params': wanted_simulation_params,
-                 'progress_bar': progress_bar,
-                 'time_span': int(time_span_input)}
+                 'progress_bar': progress_bar}
 
     pool = ThreadPool(processes=1)
     async_result = pool.apply_async(run_scenarios, tuple(arguments.values()))  # tuple of args for foo

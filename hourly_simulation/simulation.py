@@ -1,32 +1,36 @@
 from typing import Callable
 
+import numpy as np
+
 from df_objects import ProductionDf
 from df_objects.df_objects import ElectricityUseDf, DemandDf
 from hourly_simulation.parameters import Params, ELECTRICITY_COST, ELECTRICITY_SELLING_INCOME
 from hourly_simulation.predict_demand import predict_demand_in_year
 
 
-def __get_solar_production_profile(normalised_production: ProductionDf, solar_panel_power_mw: float) -> ProductionDf:
+def __get_solar_production_profile(normalised_production: ProductionDf, solar_panel_power_mw: float,
+                                   params: Params) -> ProductionDf:
     """
     Get Solar Production Profile as pd.DataFrame.
 
     :param normalised_production: ProductionDf normalised solar hourly production pd.DataFrame(columns=['HourOfYear',
         'SolarProduction'])
-    :param solar_panel_power_mw: float max power of solar panels built [mw]
+    :param solar_panel_power_mw: float max power of solar panels built [MW]
     :return: ProductionDf total production of solar panels pd.DataFrame(columns=['HourOfYear', 'SolarProduction'])
     """
     total_production = ProductionDf(normalised_production.df.copy())
-    total_production.df[total_production.SolarProduction] *= solar_panel_power_mw * 1000  # production in Kw
+    average_effective_size = (1 + (1 - params.PV_DEGRADATION) ** params.FACILITY_LIFE_SPAN) / 2
+    total_production.df[
+        total_production.SolarProduction] *= average_effective_size * solar_panel_power_mw * 1000  # production in Kw
     return total_production
 
 
 def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_capacity: float,
-                   solar_panel_power_mw: float, time_span: float = 1) -> float:
+                   solar_panel_power_mw: float) -> float:
     """
     Calculates the cost of  electricity_use
 
     :param params: namedtuple simulation params
-    :param time_span: the time of the run
     :param solar_panel_power_mw: int power of panel Mwh
     :param battery_capacity: float capacity of batteries in Mwh
     :param electricity_use: pd.DataFrame(columns=['HourOfYear', 'GasUsage', 'SolarUsage', 'StoredUsage', 'SolarStored',
@@ -54,12 +58,25 @@ def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_ca
     total_selling_income = immediate_selling_income + battery_selling_income
     # calculate PV opex and capex
     total_solar_opex = solar_panel_power_mw * params.PV_OPEX
-    total_solar_capex = solar_panel_power_mw * params.PV_CAPEX / time_span
+    total_solar_capex = solar_panel_power_mw * params.PV_CAPEX / params.FACILITY_LIFE_SPAN
     # calculate batteries opex and capex
     total_battery_opex = battery_capacity * params.BATTERY_OPEX
-    total_battery_capex = battery_capacity * params.BATTERY_CAPEX / time_span
+    total_battery_capex = battery_capacity * params.BATTERY_CAPEX / params.FACILITY_LIFE_SPAN
+    # battery_replacement_cost
+    future_battery_capex = 0.2 * battery_capacity * params.BATTERY_FUTURE_CAPEX / params.FACILITY_LIFE_SPAN
+    total_init_capex = total_battery_capex + total_solar_capex
+    total_opex = total_solar_opex + total_battery_opex
+    # capital expenses due to loans
+    total_loan = total_init_capex * params.LOAN_SIZE
+    capital_expenses = -1 * np.pmt(rate=params.LOAN_INTEREST_RATE, nper=params.LOAN_LENGTH,
+                                   pv=total_loan) * params.LOAN_LENGTH - total_loan
+    # entrepreneur profit
+    total_equity = total_init_capex * (1 - params.LOAN_SIZE)
+    entrepreneur_profit = -1 * np.pmt(rate=params.ENTREPRENEUR_PROFIT, nper=params.FACILITY_LIFE_SPAN,
+                                      pv=total_equity) * params.FACILITY_LIFE_SPAN
     # sum the cost
-    total_cost = total_gas_cost + total_solar_opex + total_solar_capex + total_battery_opex + total_battery_capex - total_selling_income
+    total_cost = total_gas_cost + total_init_capex + total_opex + future_battery_capex - total_selling_income + \
+                 capital_expenses + entrepreneur_profit
     return total_cost
 
 
@@ -68,7 +85,6 @@ def get_usage_profile(demand: DemandDf, normalised_production: ProductionDf, par
                       num_batteries: float, strategy: Callable, simulated_year: int):
     """
     Simulate Usage Profile
-
     :param demand: DemandDf of pd.DataFrame(columns=['HourOfYear', '$(Year)'])
     :param normalised_production: ProductionDf of pd.DataFrame(columns=['HourOfYear', 'SolarProduction'])
         between 0 and 1
@@ -82,14 +98,15 @@ def get_usage_profile(demand: DemandDf, normalised_production: ProductionDf, par
     """
     future_demand: DemandDf = predict_demand_in_year(hourly_demand=demand, params=params, simulated_year=simulated_year)
     total_panel_production: ProductionDf = __get_solar_production_profile(normalised_production=normalised_production,
-                                                                          solar_panel_power_mw=solar_panel_power_mw)
+                                                                          solar_panel_power_mw=solar_panel_power_mw,
+                                                                          params=params)
     electricity_use: ElectricityUseDf = strategy(future_demand, total_panel_production,
                                                  params, num_batteries)
     return electricity_use
 
 
 def simulate_use(demand: DemandDf, normalised_production: ProductionDf, params: Params, solar_panel_power_mw: float,
-                 num_batteries: float, strategy: Callable, simulated_year: int, time_span: int = 1) -> float:
+                 num_batteries: float, strategy: Callable, simulated_year: int) -> float:
     """
     simulate the usages based of demand. number of solar panels and number of panels.
 
@@ -101,7 +118,6 @@ def simulate_use(demand: DemandDf, normalised_production: ProductionDf, params: 
     :param solar_panel_power_mw: int power of solar panels Mw
     :param num_batteries: float number of batteries
     :param strategy: function responsible for handling the cost
-    :param time_span: time of which the system is expected to work
     :return: float total_cost
     """
     electricity_use = get_usage_profile(demand=demand, normalised_production=normalised_production,
@@ -111,5 +127,4 @@ def simulate_use(demand: DemandDf, normalised_production: ProductionDf, params: 
     return calculate_cost(electricity_use=electricity_use,
                           params=params,
                           battery_capacity=params.BATTERY_CAPACITY * num_batteries,
-                          solar_panel_power_mw=solar_panel_power_mw,
-                          time_span=time_span)
+                          solar_panel_power_mw=solar_panel_power_mw)
