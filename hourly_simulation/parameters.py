@@ -4,10 +4,20 @@ from typing import Dict
 
 import pandas as pd
 
-from df_objects.df_objects import CostElectricityDf, ProductionDf
+from df_objects.df_objects import CostElectricityDf
 
 # Non changing Params
 PARAMS_PATH = "data/parameters.csv"
+MW_TO_KW_DIVIDE = {
+    "/mw": "/kw",
+    "/Mw": "/Kw",
+    "/MW": "/KW"
+}
+MW_TO_KW_MULTIPLY = {
+    "mw": "kw",
+    "Mw": "Kw",
+    "MW": "KW"
+}
 
 
 def get_simulation_parameters(csv_path, with_units=False) -> Dict:
@@ -23,9 +33,21 @@ def get_simulation_parameters(csv_path, with_units=False) -> Dict:
         reader = csv.reader(csvfile, delimiter=',')
         for row in reader:
             if with_units:
-                params[row[0].strip()] = (float(row[1]), row[2])
+                if any([w in row[2] for w in MW_TO_KW_DIVIDE.keys()]):
+                    value = float(row[1]) / 1000
+                elif any([w in row[2] for w in MW_TO_KW_MULTIPLY.keys()]):
+                    value = float(row[1]) * 1000
+                else:
+                    value = float(row[1])
+                params[row[0].strip()] = (value, row[2])
             else:
-                params[row[0].strip()] = float(row[1])
+                if any([w in row[2] for w in MW_TO_KW_DIVIDE.keys()]):
+                    value = float(row[1]) / 1000
+                elif any([w in row[2] for w in MW_TO_KW_MULTIPLY.keys()]):
+                    value = float(row[1]) * 1000
+                else:
+                    value = float(row[1])
+                params[row[0].strip()] = value
     return params
 
 
@@ -41,10 +63,3 @@ ELECTRICITY_SELLING_INCOME_PATH = 'data/electricity_sell_income.csv'
 ELECTRICITY_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_PATH, index_col=0))
 ELECTRICITY_SELLING_INCOME = CostElectricityDf(pd.read_csv(ELECTRICITY_SELLING_INCOME_PATH))  # ILS per Kw
 BINARY_SELLING_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_BINARY_PATH, index_col=0))
-
-# Solar Panels
-NATIONAL_SOLAR_PRODUCTION_PATH = 'data/national_solar_production.csv'
-NATIONAL_SOLAR_PRODUCTION = ProductionDf(pd.read_csv(NATIONAL_SOLAR_PRODUCTION_PATH, index_col=0))
-NORMALISED_SOLAR_PRODUCTION = ProductionDf(NATIONAL_SOLAR_PRODUCTION.df.copy())
-NORMALISED_SOLAR_PRODUCTION.df[NORMALISED_SOLAR_PRODUCTION.SolarProduction] /= \
-    NATIONAL_SOLAR_PRODUCTION.df[NATIONAL_SOLAR_PRODUCTION.SolarProduction].max()

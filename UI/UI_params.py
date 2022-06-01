@@ -7,6 +7,12 @@ if os.path.isdir(SIMULATION_DEMAND_INPUT_PATH):
 else:
     logging.error("Could Not Found: " + os.getcwd() + "/" + SIMULATION_DEMAND_INPUT_PATH)
 
+SIMULATION_PRODUCTION_PROFILE_PATH = r"data/simulation_production_profile"
+if os.path.isdir(SIMULATION_PRODUCTION_PROFILE_PATH):
+    production_profile_files = os.listdir(SIMULATION_PRODUCTION_PROFILE_PATH)
+else:
+    logging.error("Could Not Found: " + os.getcwd() + "/" + SIMULATION_PRODUCTION_PROFILE_PATH)
+
 ASSETS_FOLDER = r"UI/assets"
 if not os.path.isdir(ASSETS_FOLDER):
     ASSETS_FOLDER = r"Lib/UI/assets"

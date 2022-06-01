@@ -159,11 +159,11 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
                      row=BATTERY_PLOT_POSITION[0],
                      col=BATTERY_PLOT_POSITION[1]
                      )
-    fig.update_yaxes(title_text="mWh",
+    fig.update_yaxes(title_text="kWh",
                      row=BUY_SELL_PLOT_POSITION[0],
                      col=BUY_SELL_PLOT_POSITION[1]
                      )
-    fig.update_yaxes(title_text="mWh",
+    fig.update_yaxes(title_text="kWh",
                      row=USAGE_PRODUCTION_PLOT_POSITION[0],
                      col=USAGE_PRODUCTION_PLOT_POSITION[1]
                      )
@@ -270,8 +270,8 @@ def simulation_graph(simulation_results: SimulationResults,
         rows=[1, 1], cols=[1, 2])
     fig.update_layout(scene=dict(
         xaxis_title='number of batteries',
-        yaxis_title='Max solar panel [kw]',
+        yaxis_title='Max solar panel [mw]',
         zaxis_title='Cost [ILS]'))
     fig.update_xaxes(title_text="number of batteries", row=1, col=1)
-    fig.update_yaxes(title_text="Max solar panel power [kw]", row=1, col=1)
+    fig.update_yaxes(title_text="Max solar panel power [mw]", row=1, col=1)
     return fig

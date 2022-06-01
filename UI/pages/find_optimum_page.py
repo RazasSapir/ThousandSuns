@@ -7,7 +7,7 @@ from dash import dcc, html, Input, State, Output, callback
 
 from UI.UI_params import *
 from df_objects.df_objects import DemandDf, ProductionDf, SimulationResults
-from hourly_simulation.parameters import NORMALISED_SOLAR_PRODUCTION, Params, get_simulation_parameters, PARAMS_PATH
+from hourly_simulation.parameters import Params, get_simulation_parameters, PARAMS_PATH
 from hourly_simulation.strategies import use_strategies
 from output_graphs import simulation_graph
 from scenario_evaluator.run_senarios import run_scenarios
@@ -15,9 +15,9 @@ from scenario_evaluator.run_senarios import run_scenarios
 block_red = {"color": "red", 'display': 'block'}
 block_green = {"color": "green", 'display': 'block'}
 display_none = {'display': 'none'}
-output_text = lambda s1, s2, s3, s4: [html.P("Solar Panels: {:,} Mw".format(s1)),
+output_text = lambda s1, s2, s3, s4: [html.P("Solar Panels: {:,} Mw".format(s1 / 1000)),
                                       html.P("{:,} Batteries: Capacity: {:,} Mwh, Max Charge Power: {:,} Mw".format(
-                                          s2, s3, s4))]
+                                          s2, s3 / 1000, s4 / 1000))]
 progress_bar = [0]
 
 
@@ -45,8 +45,11 @@ def get_layout():
                         html.Tr([
                             html.Td("Inputs:"), ]),
                         html.Tr([
-                            html.Td("Place to Simulate: "),
+                            html.Td("Demand Profile: "),
                             html.Td(dcc.Dropdown(demand_files, id='place_to_research'))]),
+                        html.Tr([
+                            html.Td("Production Profile: "),
+                            html.Td(dcc.Dropdown(production_profile_files, id='production_profile'))]),
                         html.Tr([
                             html.Td("Year to simulate: "),
                             html.Td(dbc.Input(id='year_to_simulate', value='2020', type='number'))]),
@@ -121,9 +124,11 @@ def progress_bar_update(n):
     State(component_id='year_to_simulate', component_property='value'),
     State(component_id='use_strategy', component_property='value'),
     State(component_id='place_to_research', component_property='value'),
+    State(component_id='production_profile', component_property='value'),
+
 )
 def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteries_num, pv_power_min, pv_power_max,
-                           pv_power_num, simulated_year, chosen_strategy, place_to_research):
+                           pv_power_num, simulated_year, chosen_strategy, place_to_research, production_profile):
     global progress_bar
     progress_bar = [0]
     if n_clicks == 0:
@@ -133,20 +138,24 @@ def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteri
                 float(n_batteries_min) < 0 or float(n_batteries_max) < 0 or int(n_batteries_num) < 0:
             return {}, "", "", {}, True, False
         solar_panel_power_it_mw = np.linspace(float(pv_power_min), float(pv_power_max), int(pv_power_num))
+        solar_panel_power_it_kw = np.linspace(float(pv_power_min) * 1000, float(pv_power_max) * 1000, int(pv_power_num))
         num_batteries_it = np.linspace(float(n_batteries_min), float(n_batteries_max), int(n_batteries_num))
         simulated_year = int(simulated_year)
-        if not place_to_research or not chosen_strategy or simulated_year < 0:
+        if not place_to_research or not chosen_strategy or not production_profile or simulated_year < 0:
             return {}, "", "", {}, True, False
         demand = DemandDf(pd.read_csv(os.path.join(SIMULATION_DEMAND_INPUT_PATH, place_to_research), index_col=0))
-        normalised_panel_production = ProductionDf(NORMALISED_SOLAR_PRODUCTION.df.copy())
+        normalised_production = ProductionDf(
+            pd.read_csv(os.path.join(SIMULATION_PRODUCTION_PROFILE_PATH, production_profile), index_col=0))
+        normalised_production.df[normalised_production.SolarProduction] /= normalised_production.df[
+            normalised_production.SolarProduction].max()
         wanted_simulation_params = Params(**get_simulation_parameters(PARAMS_PATH))
     except Exception as e:
         return {}, "", "", {}, False, True
 
     arguments = {'demand': demand,
-                 'single_panel_production': normalised_panel_production,
+                 'single_panel_production': normalised_production,
                  'simulated_year': simulated_year,
-                 'solar_panel_power_it_mw': solar_panel_power_it_mw,
+                 'solar_panel_power_it_kw': solar_panel_power_it_kw,
                  'num_batteries_it': num_batteries_it,
                  'strategy': use_strategies[chosen_strategy],
                  'params': wanted_simulation_params,
@@ -155,7 +164,6 @@ def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteri
     pool = ThreadPool(processes=1)
     async_result = pool.apply_async(run_scenarios, tuple(arguments.values()))  # tuple of args for foo
     simulation_results, best_combination, in_bounds = async_result.get()
-
     return simulation_graph(simulation_results=simulation_results,
                             solar_panel_power_it=solar_panel_power_it_mw,
                             num_batteries_it=num_batteries_it), \
