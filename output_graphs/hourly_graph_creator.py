@@ -1,8 +1,10 @@
+import copy
 from typing import Iterator
 
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import numpy as np
 
 from df_objects.df_objects import SimulationResults, DemandDf
 from hourly_simulation.parameters import Params, get_simulation_parameters, PARAMS_PATH
@@ -76,15 +78,16 @@ HOURS_IN_DAY = 24
 
 
 # todo: add docstring and docstring
-def yearly_graph_fig(yearly_stats: pd.DataFrame,
+def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
                      batteries_cap, demand: DemandDf,
                      num_hours_to_sum=1):
+    yearly_stats = copy.deepcopy(yearly_stats)
     x = [f"{(i // HOURS_IN_DAY) + 1} ({i % HOURS_IN_DAY + 1})"
          for i in range(len(yearly_stats.index))]
     wanted_simulation_params = Params(**get_simulation_parameters(PARAMS_PATH))
     batter_eff = wanted_simulation_params.BATTERY_EFFICIENCY
     if HIDE_BATTERY_EFFICIENCY_LOSS:
-        yearly_stats[SOLAR_LOST] -= (1 - batter_eff) * yearly_stats[SOLAR_STORED] / batter_eff
+        yearly_stats[SOLAR_LOST] = 0
     yearly_stats = yearly_stats.groupby(
         yearly_stats.index // num_hours_to_sum).sum()
 
@@ -120,7 +123,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
 
     battery_state_scatter = go.Scatter(
         x=x,
-        y=stored_state_stats(yearly_stats, batteries_cap),
+        y=stored_state_stats(yearly_stats, batteries_num, batteries_cap),
         name=NAMES[STORED_STATE],
         marker_color=COLORS[STORED_STATE],
         opacity=OPACITY,
@@ -173,11 +176,13 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
     return fig
 
 
-def stored_state_stats(yearly_stats, batteries_cap):
+def stored_state_stats(yearly_stats, batteries_num, batteries_cap):
     stored_state = [get_collection(0, yearly_stats) - get_consumption(0, yearly_stats)]
     for i in range(1, len(yearly_stats.index)):
         difference = get_collection(i, yearly_stats) - get_consumption(i, yearly_stats)
-        difference = normalize_battery(difference, batteries_cap)
+        difference = normalize_battery(difference,
+                                       batteries_num,
+                                       batteries_cap)
         stored_state.append(stored_state[i - 1] + difference)
 
     return stored_state
@@ -197,8 +202,8 @@ def get_collection(index, yearly_stats):
     return collection
 
 
-def normalize_battery(num, batteries_cap):
-    return (100 * num) / batteries_cap
+def normalize_battery(num, batteries_num, batteries_cap):
+    return (100 * num) / (batteries_num * batteries_cap)
 
 
 def yearly_graph(yearly_stats: pd.DataFrame, batteries_num,

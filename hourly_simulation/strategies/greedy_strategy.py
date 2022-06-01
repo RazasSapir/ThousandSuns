@@ -6,7 +6,7 @@ from hourly_simulation.parameters import Params
 
 
 def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Params,
-                        num_batteries: float) -> ElectricityUseDf:
+                        num_batteries: float, predict_demand_in_year: int) -> ElectricityUseDf:
     """
     This is the implementation of the greedy use strategy - using the solar produced whenever possible,
     then the stored energy and only then using gas power. This Strategy does not include selling electricity
