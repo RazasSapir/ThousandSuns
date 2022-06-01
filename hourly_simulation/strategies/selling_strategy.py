@@ -5,6 +5,7 @@ import pandas as pd
 
 from df_objects.df_objects import DemandDf, ProductionDf, ElectricityUseDf, CostElectricityDf
 from hourly_simulation.parameters import Params, ELECTRICITY_COST, BINARY_SELLING_COST, ELECTRICITY_SELLING_INCOME
+from hourly_simulation.shift_day_in_year import shift_day_of_year
 
 # todo: add documentation
 
@@ -32,9 +33,9 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
     len_simulation = len(demand.df[demand.HourOfYear])
     if not len_simulation % 24 == 0:
         raise ValueError("Length of input should be a whole number of days")
-    sale_max_power = param.MAX_SELLING_POWER * 1000 * param.BATTERY_EFFECTIVE_SIZE
-    battery_power = param.CHARGE_POWER * number_of_batteries * 1000 * param.BATTERY_EFFECTIVE_SIZE
-    battery_capacity = param.BATTERY_CAPACITY * number_of_batteries * 1000 * param.BATTERY_EFFECTIVE_SIZE
+    sale_max_power = param.MAX_SELLING_POWER
+    battery_power = param.CHARGE_POWER * number_of_batteries
+    battery_capacity = param.BATTERY_CAPACITY * number_of_batteries
     battery_efficiency = param.BATTERY_EFFICIENCY
     # Helpful definitions
     bin_cost = binary_cost_profile.df[binary_cost_profile.Cost].to_numpy()
@@ -161,7 +162,6 @@ def fill_cheap_hours(cheap_hours, day_index, production, demand, sale_max_power,
 
 
 def no_expansive_hours_day(demand, production, day_index, battery_capacity, total_stored, sale_max_power, battery_efficiency, battery_power, day_use):
-    print(f"{day_index} has no expansive hours")
     for i in range(day_index * 24, (day_index + 1) * 24):
         needed_power = demand[i]
         solar_used = min(production[i], needed_power)
@@ -171,9 +171,11 @@ def no_expansive_hours_day(demand, production, day_index, battery_capacity, tota
                            battery_power) * battery_efficiency
         day_use[ElectricityUseDf.SolarStored][i] = solar_stored
         total_stored += solar_stored
+        # energy lost when charging the battery
+        solar_stored_lost = solar_stored * (1 - battery_efficiency) / battery_efficiency
         solar_sold = min(production[i] - solar_used - solar_stored, sale_max_power)
         day_use[ElectricityUseDf.SolarSold][i] = solar_sold
-        solar_lost = production[i] - solar_used - solar_stored - solar_sold
+        solar_lost = production[i] + solar_stored_lost - solar_used - solar_stored - solar_sold
         day_use[ElectricityUseDf.SolarLost][i] = solar_lost
         stored_used = min(total_stored, needed_power, battery_power)
         day_use[ElectricityUseDf.StoredUsage][i] = stored_used
