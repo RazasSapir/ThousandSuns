@@ -6,7 +6,6 @@ from plotly.subplots import make_subplots
 
 from df_objects.df_objects import SimulationResults, DemandDf
 from hourly_simulation.parameters import Params, get_simulation_parameters, PARAMS_PATH
-from hourly_simulation.shift_day_in_year import shift_day_of_year
 
 GAS_USAGE = 'GasUsage'
 SOLAR_USAGE = 'SolarUsage'
@@ -58,7 +57,7 @@ COLORS = {
     STORED_SOLD: '#0dc014'
 }
 
-HIDE_BATTERY_EFFICIENCY_LOSS = not True
+HIDE_BATTERY_EFFICIENCY_LOSS = True
 OPACITY = 0.85
 HOVERINFO = 'x+y'
 LINES = 'lines'
@@ -78,9 +77,8 @@ HOURS_IN_DAY = 24
 
 # todo: add docstring and docstring
 def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
-                     batteries_cap, demand: DemandDf, predict_demand_in_year: int,
+                     batteries_cap, demand: DemandDf,
                      num_hours_to_sum=1):
-    batteries_cap *= 1000
     x = [f"{(i // HOURS_IN_DAY) + 1} ({i % HOURS_IN_DAY + 1})"
          for i in range(len(yearly_stats.index))]
     wanted_simulation_params = Params(**get_simulation_parameters(PARAMS_PATH))
@@ -133,7 +131,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
     )
 
     usage_sum_scatter = go.Scatter(
-        x=x, y=shift_day_of_year(demand.df[demand.Demand], predict_demand_in_year),
+        x=x, y=demand.df[demand.Demand],
         name=NAMES[USAGE_SUM],
         marker_color=COLORS[USAGE_SUM],
         opacity=OPACITY,
@@ -205,10 +203,10 @@ def normalize_battery(num, batteries_num, batteries_cap):
     return (100 * num) / (batteries_num * batteries_cap)
 
 
-def yearly_graph(yearly_stats: pd.DataFrame, batteries_num, predict_demand_in_year:int,
+def yearly_graph(yearly_stats: pd.DataFrame, batteries_num,
                  batteries_cap, demand: DemandDf, num_hours_to_sum=1):
     yearly_graph_fig(yearly_stats, batteries_num,
-                     batteries_cap, demand, predict_demand_in_year, num_hours_to_sum).show()
+                     batteries_cap, demand, num_hours_to_sum).show()
 
 
 def daily_graph(daily_stats: pd.DataFrame):
