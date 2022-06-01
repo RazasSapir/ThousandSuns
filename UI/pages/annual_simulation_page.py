@@ -128,7 +128,7 @@ def run_simulation(n_clicks, num_batteries, solar_panel_power_mw, simulated_year
     last_simulation_results = for_download
     return yearly_graph_fig(electricity_use.df,
                             params.BATTERY_CAPACITY * num_batteries, demand,
-                            num_hours_to_sum=1), False
+                            num_hours_to_sum=1, demand_year=demand.YearOfDemand), False
 
 
 @callback(
