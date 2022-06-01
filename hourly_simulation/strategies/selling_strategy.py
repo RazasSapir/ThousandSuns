@@ -40,12 +40,16 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
     battery_efficiency = param.BATTERY_EFFICIENCY
     # Helpful definitions
     bin_cost = binary_cost_profile.df[binary_cost_profile.Cost].to_numpy()
-    production = shift_day_of_year(copy.deepcopy(production.df[production.SolarProduction].to_numpy()), 2020)  # overwriting
-    demand = shift_day_of_year(demand.df[demand.Demand].to_numpy(), predict_demand_in_year)  # shift demand to start on sunday
+    # production = shift_day_of_year(copy.deepcopy(production.df[production.SolarProduction].to_numpy()), 2020)  # overwriting
+    # demand = shift_day_of_year(copy.deepcopy(demand.df[demand.Demand].to_numpy()), predict_demand_in_year)  # shift demand to start on sunday
+    production = copy.deepcopy(production.df[production.SolarProduction].to_numpy())
+    demand = copy.deepcopy(demand.df[demand.Demand].to_numpy())
     day_use = {c: np.zeros(len(demand)) for c in ElectricityUseDf.COLUMNS}
     total_stored = 0
     # Iterating days
     for day_index in range(0, len_simulation // 24):
+        if day_index == 63:
+            print(f"day {day_index}")
         # iterate expensive hours and use all the production for the demand
         expensive_hours = [i for i, x in enumerate(bin_cost[day_index * 24: (day_index + 1) * 24]) if x == 1]
         cheap_hours = [i for i, x in enumerate(bin_cost[day_index * 24: (day_index + 1) * 24]) if x == 0]
@@ -168,15 +172,15 @@ def no_expansive_hours_day(demand, production, day_index, battery_capacity, tota
         solar_used = min(production[i], needed_power)
         day_use[ElectricityUseDf.SolarUsage][i] = solar_used
         needed_power -= solar_used
-        solar_stored = min(production[i] - solar_used, battery_capacity - total_stored,
-                           battery_power) * battery_efficiency
-        day_use[ElectricityUseDf.SolarStored][i] = solar_stored
-        total_stored += solar_stored
+        solar_stored_natural = min(production[i] - solar_used, (battery_capacity - total_stored) / battery_efficiency,
+                           battery_power / battery_efficiency)
+        day_use[ElectricityUseDf.SolarStored][i] = solar_stored_natural * battery_efficiency
+        total_stored += solar_stored_natural * battery_efficiency
         # energy lost when charging the battery
-        solar_stored_lost = solar_stored * (1 - battery_efficiency) / battery_efficiency
-        solar_sold = min(production[i] - solar_used - solar_stored, sale_max_power)
+        solar_stored_lost = solar_stored_natural * (1 - battery_efficiency)
+        solar_sold = min(production[i] - solar_used - solar_stored_natural, sale_max_power)
         day_use[ElectricityUseDf.SolarSold][i] = solar_sold
-        solar_lost = production[i] + solar_stored_lost - solar_used - solar_stored - solar_sold
+        solar_lost = production[i] + solar_stored_lost - solar_used - solar_stored_natural - solar_sold
         day_use[ElectricityUseDf.SolarLost][i] = solar_lost
         stored_used = min(total_stored, needed_power, battery_power)
         day_use[ElectricityUseDf.StoredUsage][i] = stored_used
@@ -198,7 +202,7 @@ def combine_to_df(day_use, sell_profile):
     hourly_use.df[hourly_use.SolarUsage] = day_use[ElectricityUseDf.SolarUsage]
     hourly_use.df[hourly_use.StoredUsage] = day_use[ElectricityUseDf.StoredUsage]
     hourly_use.df[hourly_use.SolarStored] = day_use[ElectricityUseDf.SolarStored]
-    hourly_use.df[hourly_use.SolarLost] = day_use[ElectricityUseDf.SolarLost]
+    hourly_use.df[hourly_use.SolarLost] = round_array(day_use[ElectricityUseDf.SolarLost], 6)
     hourly_use.df[hourly_use.SolarSold] = day_use[ElectricityUseDf.SolarSold]
     hourly_use.df[hourly_use.StoredSold] = day_use[ElectricityUseDf.StoredSold]
     hourly_use.df[hourly_use.GasStored] = day_use[ElectricityUseDf.GasStored]
@@ -214,12 +218,16 @@ def ordered_hours(hours, sell_profile, day_index):
     return [get_index(day_index, i) for i in ordered_hours]
 
 
-if __name__ == '__main__':
-    import datetime
+def round_array(arr, decimal):
+    new_arr = copy.deepcopy(arr)
+    print(new_arr)
+    for i in range(len(new_arr)):
+        if 0 < abs(new_arr[i]) < 10 ^ (-decimal):
+            print(f"index {i} is negative and equals to {arr[i]}")
+            new_arr[i] = 0
 
-    year = int(input("Enter year: "))
-    firstday = datetime.datetime(year, 1, 1)
-    print("First Day of ", year, " = ", firstday.strftime("%A"))
+    return new_arr
+
 
 
 

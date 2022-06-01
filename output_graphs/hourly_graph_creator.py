@@ -1,8 +1,10 @@
+import copy
 from typing import Iterator
 
 import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+import numpy as np
 
 from df_objects.df_objects import SimulationResults, DemandDf
 from hourly_simulation.parameters import Params, get_simulation_parameters, PARAMS_PATH
@@ -79,12 +81,13 @@ HOURS_IN_DAY = 24
 def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
                      batteries_cap, demand: DemandDf,
                      num_hours_to_sum=1):
+    yearly_stats = copy.deepcopy(yearly_stats)
     x = [f"{(i // HOURS_IN_DAY) + 1} ({i % HOURS_IN_DAY + 1})"
          for i in range(len(yearly_stats.index))]
     wanted_simulation_params = Params(**get_simulation_parameters(PARAMS_PATH))
     batter_eff = wanted_simulation_params.BATTERY_EFFICIENCY
     if HIDE_BATTERY_EFFICIENCY_LOSS:
-        yearly_stats[SOLAR_LOST] -= (1 - batter_eff) * yearly_stats[SOLAR_STORED] / batter_eff
+        yearly_stats[SOLAR_LOST] = 0
     yearly_stats = yearly_stats.groupby(
         yearly_stats.index // num_hours_to_sum).sum()
 

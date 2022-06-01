@@ -18,7 +18,7 @@ def test_simulation(electricity_use: ElectricityUseDf, demand: DemandDf, product
     :param epsilon: small number to account for computational errors
     :return: None
     """
-    test_non_negative(electricity_use)
+    test_non_negative(electricity_use, epsilon)
     test_demand_is_reached(demand.df[demand.Demand], electricity_use, epsilon)
     test_production_is_used(production.df[production.SolarProduction], electricity_use, epsilon)
     test_all_stored_is_used(electricity_use, num_batteries * params.BATTERY_CAPACITY *
@@ -30,7 +30,7 @@ def test_simulation(electricity_use: ElectricityUseDf, demand: DemandDf, product
     logging.info("Passed all tests")
 
 
-def test_non_negative(electricity_use: ElectricityUseDf) -> None:
+def test_non_negative(electricity_use: ElectricityUseDf, epsilon) -> None:
     """
     Makes sure all the number are non-negative
 
@@ -73,7 +73,14 @@ def test_production_is_used(production: pd.Series, electricity_use: ElectricityU
                            electricity_use.df[electricity_use.SolarLost] + \
                            electricity_use.df[electricity_use.SolarSold]
 
-    assert (should_be_production - production < epsilon).values.all(), "Not all production was used"
+    for i in range(len(should_be_production)):
+        if abs(should_be_production[i] - production[i]) > epsilon:
+            # print(f"in index {i}, {should_be_production[i]} - {production[i]} > {epsilon}")
+            print(f"in index {i}, difference = {should_be_production[i] - production[i]}, (lost + stored) * (1-battery_efficiency) = "
+                  f"{(electricity_use.df[electricity_use.SolarLost][i] + electricity_use.df[electricity_use.SolarStored][i])*0.13}")
+
+
+    assert (abs(should_be_production - production) < epsilon).values.all(), "Not all production was used"
     logging.info("passed test_production_is_used")
 
 
