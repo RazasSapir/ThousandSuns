@@ -1,3 +1,4 @@
+import copy
 from typing import Callable
 
 import numpy_financial as npf
@@ -16,9 +17,10 @@ def get_solar_production_profile(normalised_production: ProductionDf, solar_pane
     :param normalised_production: ProductionDf normalised solar hourly production pd.DataFrame(columns=['HourOfYear',
         'SolarProduction'])
     :param solar_panel_power_kw: float max power of solar panels built [KW]
+    :param params: namedtuple simulation params
     :return: ProductionDf total production of solar panels pd.DataFrame(columns=['HourOfYear', 'SolarProduction'])
     """
-    total_production = ProductionDf(normalised_production.df.copy())
+    total_production = copy.deepcopy(normalised_production)
     average_effective_size = (1 + (1 - params.PV_DEGRADATION) ** params.FACILITY_LIFE_SPAN) / 2
     total_production.df[
         total_production.SolarProduction] *= average_effective_size * solar_panel_power_kw  # production in Kw
@@ -63,11 +65,11 @@ def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_ca
     total_battery_opex = battery_capacity * params.BATTERY_OPEX
     total_battery_capex = battery_capacity * params.BATTERY_CAPEX / params.FACILITY_LIFE_SPAN
     # battery_replacement_cost
-    future_battery_capex = 0 * battery_capacity * params.BATTERY_FUTURE_CAPEX / params.FACILITY_LIFE_SPAN
+    future_battery_capex = params.BATTERY_ADDED_FOR_REPLACEMENT * battery_capacity * params.BATTERY_FUTURE_CAPEX / params.FACILITY_LIFE_SPAN
     total_init_capex = total_battery_capex + total_solar_capex
     total_opex = total_solar_opex + total_battery_opex
     # capital expenses due to loans
-    total_loan = total_init_capex * params.LOAN_SIZE
+    total_loan = total_init_capex * params.FACILITY_LIFE_SPAN * params.LOAN_SIZE
     capital_expenses = (-1 * npf.pmt(rate=params.LOAN_INTEREST_RATE, nper=params.LOAN_LENGTH,
                                      pv=total_loan) * params.LOAN_LENGTH - total_loan) / params.FACILITY_LIFE_SPAN
     # entrepreneur profit
@@ -96,13 +98,13 @@ def get_usage_profile(demand: DemandDf, normalised_production: ProductionDf, par
     :return: ElectricityUseDf pd.DataFrame(columns=['HourOfYear', 'GasUsage', 'GasStored', 'SolarUsage', 'StoredUsage',
                 'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
     """
-    future_demand, year_of_demand = predict_demand_in_year(hourly_demand=demand, params=params,
-                                                           simulated_year=simulated_year)
+    future_demand = predict_demand_in_year(hourly_demand=demand, params=params,
+                                           simulated_year=simulated_year)
     total_panel_production: ProductionDf = get_solar_production_profile(normalised_production=normalised_production,
                                                                         solar_panel_power_kw=solar_panel_power_kw,
                                                                         params=params)
     electricity_use: ElectricityUseDf = strategy(future_demand, total_panel_production,
-                                                 params, num_batteries, year_of_demand)
+                                                 params, num_batteries, future_demand.YearOfDemand)
     return electricity_use
 
 

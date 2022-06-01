@@ -57,5 +57,5 @@ ELECTRICITY_COST_PATH = 'data/electricity_cost.csv'
 ELECTRICITY_COST_BINARY_PATH = 'data/electricity_cost_binary.csv'
 ELECTRICITY_SELLING_INCOME_PATH = 'data/electricity_sell_income.csv'
 ELECTRICITY_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_PATH, index_col=0))
-ELECTRICITY_SELLING_INCOME = CostElectricityDf(pd.read_csv(ELECTRICITY_SELLING_INCOME_PATH))  # ILS per Kw
+ELECTRICITY_SELLING_INCOME = CostElectricityDf(pd.read_csv(ELECTRICITY_SELLING_INCOME_PATH, index_col=0))  # ILS per Kw
 BINARY_SELLING_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_BINARY_PATH, index_col=0))
