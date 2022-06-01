@@ -20,8 +20,8 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Para
                 'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
     """
     gas_usage_arr, solar_usage_arr, stored_usage_arr, solar_stored_arr, solar_lost_arr = __greedy_use_loop(
-        num_batteries * params.BATTERY_CAPACITY * 1000 * params.BATTERY_EFFECTIVE_SIZE,
-        num_batteries * params.CHARGE_POWER * 1000,
+        num_batteries * params.BATTERY_CAPACITY * params.BATTERY_EFFECTIVE_SIZE,
+        num_batteries * params.CHARGE_POWER,
         params.BATTERY_EFFICIENCY,
         demand.df[demand.Demand].to_numpy(),
         production.df[production.SolarProduction].to_numpy())

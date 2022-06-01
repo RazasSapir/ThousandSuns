@@ -21,9 +21,10 @@ def test_simulation(electricity_use: ElectricityUseDf, demand: DemandDf, product
     test_non_negative(electricity_use)
     test_demand_is_reached(demand.df[demand.Demand], electricity_use, epsilon)
     test_production_is_used(production.df[production.SolarProduction], electricity_use, epsilon)
-    test_all_stored_is_used(electricity_use, num_batteries * params.BATTERY_CAPACITY)
-    test_battery_capacity_is_not_passed(electricity_use, num_batteries * params.BATTERY_CAPACITY,
-                                        num_batteries * params.CHARGE_POWER, epsilon)
+    test_all_stored_is_used(electricity_use, num_batteries * params.BATTERY_CAPACITY *
+                            params.BATTERY_EFFECTIVE_SIZE)
+    test_battery_capacity_is_not_passed(electricity_use, num_batteries * params.BATTERY_CAPACITY *
+                                        params.BATTERY_EFFECTIVE_SIZE, num_batteries * params.CHARGE_POWER, epsilon)
     test_charge_power_not_passed(electricity_use, num_batteries * params.CHARGE_POWER, epsilon)
     test_selling_limit_not_passed(electricity_use, params.MAX_SELLING_POWER, epsilon)
     logging.info("Passed all tests")
@@ -139,7 +140,7 @@ def test_selling_limit_not_passed(electricity_use: ElectricityUseDf, selling_lim
 
     :param electricity_use: ElectricityUseDf pd.DataFrame(columns=['HourOfYear', 'GasUsage', 'GasStored', 'SolarUsage',
         'StoredUsage', 'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
-    :param charge_power: the maximum charge power of the battery
+    :param selling_limit: the maximum selling power of the battery
     :return:
     """
     assert (abs(electricity_use.df[electricity_use.SolarSold] +
