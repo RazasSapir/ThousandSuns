@@ -7,6 +7,7 @@ from plotly.subplots import make_subplots
 
 from df_objects.df_objects import SimulationResults, DemandDf
 from hourly_simulation.parameters import Params, get_simulation_parameters, PARAMS_PATH
+from hourly_simulation.shift_day_in_year import shift_day_of_year
 
 GAS_USAGE = 'GasUsage'
 SOLAR_USAGE = 'SolarUsage'
@@ -78,7 +79,7 @@ HOURS_IN_DAY = 24
 
 # todo: add docstring and docstring
 def yearly_graph_fig(yearly_stats: pd.DataFrame,
-                     batteries_cap, demand: DemandDf,
+                     batteries_cap, demand: DemandDf, demand_year,
                      num_hours_to_sum=1):
     yearly_stats = copy.deepcopy(yearly_stats)
     x = [f"{(i // HOURS_IN_DAY) + 1} ({i % HOURS_IN_DAY + 1})"
@@ -133,7 +134,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
     )
 
     usage_sum_scatter = go.Scatter(
-        x=x, y=demand.df[demand.Demand],
+        x=x, y=shift_day_of_year(demand.df[demand.Demand], demand_year),
         name=NAMES[USAGE_SUM],
         marker_color=COLORS[USAGE_SUM],
         opacity=OPACITY,
@@ -205,9 +206,9 @@ def normalize_battery(num, batteries_cap):
 
 
 def yearly_graph(yearly_stats: pd.DataFrame,
-                 batteries_cap, demand: DemandDf, num_hours_to_sum=1):
+                 batteries_cap, demand: DemandDf, demand_year, num_hours_to_sum=1):
     yearly_graph_fig(yearly_stats,
-                     batteries_cap, demand, num_hours_to_sum).show()
+                     batteries_cap, demand, demand_year, num_hours_to_sum).show()
 
 
 def daily_graph(daily_stats: pd.DataFrame):
