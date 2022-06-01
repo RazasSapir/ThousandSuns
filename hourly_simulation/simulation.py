@@ -96,12 +96,13 @@ def get_usage_profile(demand: DemandDf, normalised_production: ProductionDf, par
     :return: ElectricityUseDf pd.DataFrame(columns=['HourOfYear', 'GasUsage', 'GasStored', 'SolarUsage', 'StoredUsage',
                 'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
     """
-    future_demand: DemandDf = predict_demand_in_year(hourly_demand=demand, params=params, simulated_year=simulated_year)
+    future_demand, year_of_demand = predict_demand_in_year(hourly_demand=demand, params=params,
+                                                           simulated_year=simulated_year)
     total_panel_production: ProductionDf = get_solar_production_profile(normalised_production=normalised_production,
                                                                         solar_panel_power_kw=solar_panel_power_kw,
                                                                         params=params)
     electricity_use: ElectricityUseDf = strategy(future_demand, total_panel_production,
-                                                 params, num_batteries)
+                                                 params, num_batteries, year_of_demand)
     return electricity_use
 
 
