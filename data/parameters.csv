@@ -8,10 +8,10 @@ PV_OPEX               ,70000  ,ILS/Mw/year
 PV_CAPEX              ,2600000,ILS/Mw
 FACILITY_LIFE_SPAN    ,25     ,yeas
 MAX_SELLING_POWER     ,14.4   ,Mw
-PV_DEGRADATION        ,0.004  ,ratio
-BATTERY_EFFECTIVE_SIZE,0.95   ,ratio
-BATTERY_FUTURE_CAPEX  ,50000  ,ILS/Mwh/year
+PV_DEGRADATION        ,0      ,ratio
+BATTERY_EFFECTIVE_SIZE,1      ,ratio
+BATTERY_FUTURE_CAPEX  ,500000 ,ILS/Mwh/year
 LOAN_SIZE             ,0.8    ,ratio
-LOAN_INTEREST_RATE    ,0.01   ,ratio
+LOAN_INTEREST_RATE    ,0      ,ratio
 LOAN_LENGTH           ,10     ,years
-ENTREPRENEUR_PROFIT   ,0.1    ,ratio
+ENTREPRENEUR_PROFIT   ,0      ,ratio

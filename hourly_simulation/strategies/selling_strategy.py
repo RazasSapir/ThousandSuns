@@ -5,7 +5,6 @@ import pandas as pd
 
 from df_objects.df_objects import DemandDf, ProductionDf, ElectricityUseDf, CostElectricityDf
 from hourly_simulation.parameters import Params, ELECTRICITY_COST, BINARY_SELLING_COST, ELECTRICITY_SELLING_INCOME
-from hourly_simulation.shift_day_in_year import shift_day_of_year
 
 
 # todo: add documentation
@@ -174,7 +173,7 @@ def no_expansive_hours_day(demand, production, day_index, battery_capacity, tota
         total_stored += solar_stored
         # energy lost when charging the battery
         solar_stored_lost = solar_stored * (1 - battery_efficiency) / battery_efficiency
-        solar_sold = min(production[i] - solar_used - solar_stored, sale_max_power)
+        solar_sold = min(production[i] - solar_used - solar_stored - solar_stored_lost, sale_max_power)
         day_use[ElectricityUseDf.SolarSold][i] = solar_sold
         solar_lost = production[i] + solar_stored_lost - solar_used - solar_stored - solar_sold
         day_use[ElectricityUseDf.SolarLost][i] = solar_lost

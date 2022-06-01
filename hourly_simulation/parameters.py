@@ -20,11 +20,19 @@ MW_TO_KW_MULTIPLY = {
 }
 
 
-def get_simulation_parameters(csv_path, with_units=False) -> Dict:
+def mw_to_kw(value, unit, as_mw):
+    if any([w in unit for w in MW_TO_KW_DIVIDE.keys()]) and not as_mw:
+        value = float(value) / 1000
+    elif any([w in unit for w in MW_TO_KW_MULTIPLY.keys()]) and not as_mw:
+        value = float(value) * 1000
+    return float(value)
+
+
+def get_simulation_parameters(csv_path, with_units=False, as_mw=False) -> Dict:
     """
     Retrieves the parameters from csv_path as dictionary
 
-    :param csv_path: str path of parameters.csv file
+    :param csv_path: str path of parameters_backup.csv file
     :param with_units: boolean should return the units (third column) as well?
     :return: if with_units: dictionary(str -> float). else: dictionary(str -> (float, str))
     """
@@ -33,21 +41,9 @@ def get_simulation_parameters(csv_path, with_units=False) -> Dict:
         reader = csv.reader(csvfile, delimiter=',')
         for row in reader:
             if with_units:
-                if any([w in row[2] for w in MW_TO_KW_DIVIDE.keys()]):
-                    value = float(row[1]) / 1000
-                elif any([w in row[2] for w in MW_TO_KW_MULTIPLY.keys()]):
-                    value = float(row[1]) * 1000
-                else:
-                    value = float(row[1])
-                params[row[0].strip()] = (value, row[2])
+                params[row[0].strip()] = (mw_to_kw(row[1], row[2], as_mw), row[2])
             else:
-                if any([w in row[2] for w in MW_TO_KW_DIVIDE.keys()]):
-                    value = float(row[1]) / 1000
-                elif any([w in row[2] for w in MW_TO_KW_MULTIPLY.keys()]):
-                    value = float(row[1]) * 1000
-                else:
-                    value = float(row[1])
-                params[row[0].strip()] = value
+                params[row[0].strip()] = mw_to_kw(row[1], row[2], as_mw)
     return params
 
 

@@ -16,7 +16,7 @@ def get_layout():
                 html.Td(k),
                 html.Td(dbc.Input(id=k, value=v[0], type='number')),
                 html.Td(v[1])]) for k, v in
-            get_simulation_parameters(PARAMS_PATH, with_units=True).items()
+            get_simulation_parameters(PARAMS_PATH, with_units=True, as_mw=True).items()
         ], id="simulation_params_table"),
         dbc.Button(id='save_parameters', children='Save Parameters', n_clicks=0),
         dcc.Loading(

@@ -18,7 +18,7 @@ def test_simulation(electricity_use: ElectricityUseDf, demand: DemandDf, product
     :param epsilon: small number to account for computational errors
     :return: None
     """
-    test_non_negative(electricity_use)
+    test_non_negative(electricity_use, epsilon)
     test_demand_is_reached(demand.df[demand.Demand], electricity_use, epsilon)
     test_production_is_used(production.df[production.SolarProduction], electricity_use, epsilon)
     test_all_stored_is_used(electricity_use, num_batteries * params.BATTERY_CAPACITY *
@@ -30,7 +30,7 @@ def test_simulation(electricity_use: ElectricityUseDf, demand: DemandDf, product
     logging.info("Passed all tests")
 
 
-def test_non_negative(electricity_use: ElectricityUseDf) -> None:
+def test_non_negative(electricity_use: ElectricityUseDf, epsilon: float) -> None:
     """
     Makes sure all the number are non-negative
 
@@ -38,7 +38,7 @@ def test_non_negative(electricity_use: ElectricityUseDf) -> None:
         'StoredUsage', 'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
     :return: None
     """
-    assert not (electricity_use.df < 0).values.any(), "Found Negative value"
+    assert not (electricity_use.df < - epsilon).values.any(), "Found Negative value"
     logging.info("Passed test_non_negative")
 
 
