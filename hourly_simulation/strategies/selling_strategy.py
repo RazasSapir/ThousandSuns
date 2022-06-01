@@ -13,7 +13,7 @@ def get_index(day_index: int, hour_index: int):
     return day_index * 24 + hour_index
 
 
-def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Params, number_of_batteries,
+def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Params, number_of_batteries, predict_demand_in_year: int,
                            binary_cost_profile:
                            CostElectricityDf = BINARY_SELLING_COST, cost_profile: CostElectricityDf = ELECTRICITY_COST,
                            sell_profile:
@@ -39,8 +39,8 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
     battery_efficiency = param.BATTERY_EFFICIENCY
     # Helpful definitions
     bin_cost = binary_cost_profile.df[binary_cost_profile.Cost].to_numpy()
-    production = copy.deepcopy(production.df[production.SolarProduction].to_numpy())  # overwriting
-    demand = demand.df[demand.Demand].to_numpy()
+    production = shift_day_of_year(copy.deepcopy(production.df[production.SolarProduction].to_numpy()), 2020)  # overwriting
+    demand = shift_day_of_year(demand.df[demand.Demand].to_numpy(), predict_demand_in_year)  # shift demand to start on sunday
     day_use = {c: np.zeros(len(demand)) for c in ElectricityUseDf.COLUMNS}
     total_stored = 0
     # Iterating days
