@@ -40,10 +40,10 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
     battery_efficiency = param.BATTERY_EFFICIENCY
     # Helpful definitions
     bin_cost = binary_cost_profile.df[binary_cost_profile.Cost].to_numpy()
-    # production = shift_day_of_year(copy.deepcopy(production.df[production.SolarProduction].to_numpy()), 2020)  # overwriting
-    # demand = shift_day_of_year(copy.deepcopy(demand.df[demand.Demand].to_numpy()), predict_demand_in_year)  # shift demand to start on sunday
-    production = copy.deepcopy(production.df[production.SolarProduction].to_numpy())
-    demand = copy.deepcopy(demand.df[demand.Demand].to_numpy())
+    production = shift_day_of_year(copy.deepcopy(production.df[production.SolarProduction].to_numpy()), 2020)  # overwriting
+    demand = shift_day_of_year(copy.deepcopy(demand.df[demand.Demand].to_numpy()), predict_demand_in_year)  # shift demand to start on sunday
+    # production = copy.deepcopy(production.df[production.SolarProduction].to_numpy())
+    # demand = copy.deepcopy(demand.df[demand.Demand].to_numpy())
     day_use = {c: np.zeros(len(demand)) for c in ElectricityUseDf.COLUMNS}
     total_stored = 0
     # Iterating days
