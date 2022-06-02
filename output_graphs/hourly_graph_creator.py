@@ -75,7 +75,7 @@ FILL_PATTERN = {
 
     STORED_USAGE: '',
     STORED_STATE: '/',
-    STORED_SOLD: '',
+    STORED_SOLD: '/',
 }
 
 HIDE_BATTERY_EFFICIENCY_LOSS = True
