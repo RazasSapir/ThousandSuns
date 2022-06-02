@@ -224,10 +224,10 @@ def ordered_cheap_hours(hours, sell_profile, day_index, threshold_day=20):
 
 def round_array(arr, decimal):
     new_arr = copy.deepcopy(arr)
-    print(new_arr)
+    # print(new_arr)
     for i in range(len(new_arr)):
         if 0 < abs(new_arr[i]) < 10 ^ (-decimal):
-            print(f"index {i} is negative and equals to {arr[i]}")
+            # print(f"index {i} is negative and equals to {arr[i]}")
             new_arr[i] = 0
 
     return new_arr

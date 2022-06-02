@@ -124,10 +124,16 @@ def run_simulation(n_clicks, num_batteries, solar_panel_power_mw, simulated_year
     for_download = electricity_use.df.copy()
     for_download["Demand"] = demand.df[demand.Demand]
     for_download[normalised_production.SolarProduction] = get_solar_production_profile(
-        normalised_production, solar_panel_power_kw, params)
+        normalised_production, solar_panel_power_kw, params).df[ProductionDf.SolarProduction]
     last_simulation_results = for_download
-    return yearly_graph_fig(electricity_use.df, num_batteries,
-                            params.BATTERY_CAPACITY, demand,
+    try:
+        test_simulation(electricity_use=electricity_use, demand=demand,
+                        production=get_solar_production_profile(normalised_production, solar_panel_power_kw, params),
+                        params=params, num_batteries=num_batteries)
+    except AssertionError:
+        logging.error(traceback.format_exc())
+    return yearly_graph_fig(electricity_use.df,
+                            params.BATTERY_CAPACITY * num_batteries, demand,
                             num_hours_to_sum=1,
                             demand_year=demand.YearOfDemand), False
 
