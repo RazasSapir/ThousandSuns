@@ -126,9 +126,10 @@ def run_simulation(n_clicks, num_batteries, solar_panel_power_mw, simulated_year
     for_download[normalised_production.SolarProduction] = get_solar_production_profile(
         normalised_production, solar_panel_power_kw, params)
     last_simulation_results = for_download
-    return yearly_graph_fig(electricity_use.df,
-                            params.BATTERY_CAPACITY * num_batteries, demand,
-                            num_hours_to_sum=1, demand_year=demand.YearOfDemand), False
+    return yearly_graph_fig(electricity_use.df, num_batteries,
+                            params.BATTERY_CAPACITY, demand,
+                            num_hours_to_sum=1,
+                            demand_year=demand.YearOfDemand), False
 
 
 @callback(
