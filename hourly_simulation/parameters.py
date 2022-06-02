@@ -5,6 +5,7 @@ from typing import Dict
 import pandas as pd
 
 from df_objects.df_objects import CostElectricityDf
+from hourly_simulation.shift_day_in_year import shift_day_of_year
 
 # Non changing Params
 PARAMS_PATH = "data/parameters.csv"
@@ -55,7 +56,11 @@ simulation_params = Params(**__simulation_params_dict)
 
 ELECTRICITY_COST_PATH = 'data/electricity_cost.csv'
 ELECTRICITY_COST_BINARY_PATH = 'data/shifted_electricity_cost_binary.csv'
-ELECTRICITY_SELLING_INCOME_PATH = 'data/electricity_sell_income.csv'
+ELECTRICITY_SELLING_INCOME_PATH = 'data/electricity_sell_gaussian.csv'
 ELECTRICITY_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_PATH, index_col=0))
+ELECTRICITY_COST.df[ELECTRICITY_COST.Cost] = shift_day_of_year(ELECTRICITY_COST.df[ELECTRICITY_COST.Cost], ELECTRICITY_COST.YearOfCost)
 ELECTRICITY_SELLING_INCOME = CostElectricityDf(pd.read_csv(ELECTRICITY_SELLING_INCOME_PATH, index_col=0))  # ILS per Kw
+ELECTRICITY_SELLING_INCOME.df[ELECTRICITY_SELLING_INCOME.Cost] = shift_day_of_year(ELECTRICITY_SELLING_INCOME.df[ELECTRICITY_SELLING_INCOME.Cost], ELECTRICITY_SELLING_INCOME.YearOfCost)
 BINARY_SELLING_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_BINARY_PATH, index_col=0))
+BINARY_SELLING_COST.df[BINARY_SELLING_COST.Cost] = shift_day_of_year(BINARY_SELLING_COST.df[BINARY_SELLING_COST.Cost], BINARY_SELLING_COST.YearOfCost)
+
