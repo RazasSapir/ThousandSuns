@@ -91,7 +91,7 @@ class CostElectricityDf(InputDataFrameWrapper):
     """
     ProductionDf object that hold pd.DataFrame of the Electricity cost (buying and selling)
     """
-    Cost = "Cost ILS/Kwh"
+    Cost = "Cost_ILS_Kwh"
 
     def __init__(self, df: pd.DataFrame):
         InputDataFrameWrapper.__init__(self, df)
