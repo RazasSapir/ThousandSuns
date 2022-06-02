@@ -64,10 +64,11 @@ def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_ca
     # calculate batteries opex and capex
     total_battery_opex = battery_capacity * params.BATTERY_OPEX
     total_battery_capex = battery_capacity * params.BATTERY_CAPEX / params.FACILITY_LIFE_SPAN
-    # battery_replacement_cost
-    future_battery_capex = params.BATTERY_ADDED_FOR_REPLACEMENT * battery_capacity * params.BATTERY_FUTURE_CAPEX / params.FACILITY_LIFE_SPAN
+    # sum opex and capex
     total_init_capex = total_battery_capex + total_solar_capex
     total_opex = total_solar_opex + total_battery_opex
+    # battery_replacement_cost
+    future_battery_capex = params.BATTERY_ADDED_FOR_REPLACEMENT * battery_capacity * params.BATTERY_FUTURE_CAPEX / params.FACILITY_LIFE_SPAN
     # capital expenses due to loans
     total_loan = total_init_capex * params.FACILITY_LIFE_SPAN * params.LOAN_SIZE
     capital_expenses = (-1 * npf.pmt(rate=params.LOAN_INTEREST_RATE, nper=params.LOAN_LENGTH,
