@@ -38,7 +38,7 @@ NAMES = {
     SOLAR_USAGE: 'Solar Energy Consumption',
     STORED_USAGE: 'Stored Solar Energy Consumption',
     SOLAR_STORED: 'Stored Solar Energy',
-    SOLAR_LOST: 'Lost Solar Energy',
+    # SOLAR_LOST: 'Lost Solar Energy',
     STORED_STATE: 'Batteries Charge',
     USAGE_SUM: 'Total Energy Consumption',
     SOLAR_SOLD: "Solar Energy Sold",
@@ -47,28 +47,47 @@ NAMES = {
 }
 
 COLORS = {
-    GAS_USAGE: '#999999',
-    SOLAR_USAGE: '#00FF00',
-    STORED_USAGE: '#00bcd4',
-    SOLAR_STORED: '#FFC300',
-    SOLAR_LOST: '#2f2f2f',
-    STORED_STATE: '#bc00d4',
-    USAGE_SUM: '#b33b3b',
-    SOLAR_SOLD: '#f2f2f2',
-    GAS_STORED: '#4500ff',
-    STORED_SOLD: '#0dc014'
+    GAS_USAGE: '#909090',
+    GAS_STORED: '#909090',
+
+
+    SOLAR_USAGE: '#FFE000',
+    SOLAR_STORED: '#FFE000',
+    SOLAR_SOLD: '#50FF00',
+    SOLAR_LOST: '#909090',
+
+    STORED_USAGE: '#ADD8E6',
+    STORED_STATE: '#ADD8E6',
+    STORED_SOLD: '#00B838',
+
+    USAGE_SUM: '#FF2020',
+}
+
+FILL_PATTERN = {
+    GAS_USAGE: '',
+    GAS_STORED: '/',
+
+
+    SOLAR_USAGE: '',
+    SOLAR_STORED: '/',
+    SOLAR_SOLD: '',
+    SOLAR_LOST: '/',
+
+    STORED_USAGE: '',
+    STORED_STATE: '/',
+    STORED_SOLD: '',
 }
 
 HIDE_BATTERY_EFFICIENCY_LOSS = True
-OPACITY = 0.85
+OPACITY = 1
 HOVERINFO = 'x+y'
 LINES = 'lines'
 WIDTH = 0.5
-THICK_WIDTH = 3.5
+THICK_WIDTH = 2.5
 STACKGROUP_ONE = 'one'
 STACKGROUP_TWO = 'two'
 STACKGROUP_THREE = 'three'
-DASH = 'dash'
+DASH = 'solid'
 
 BATTERY_PLOT_POSITION = (1, 1)
 BUY_SELL_PLOT_POSITION = (2, 1)
@@ -78,23 +97,22 @@ HOURS_IN_DAY = 24
 
 
 # todo: add docstring and docstring
-def yearly_graph_fig(yearly_stats: pd.DataFrame,
+def yearly_graph_fig(yearly_stats: pd.DataFrame, batteries_num,
                      batteries_cap, demand: DemandDf, demand_year,
                      num_hours_to_sum=1):
     yearly_stats = copy.deepcopy(yearly_stats)
-    x = [f"{(i // HOURS_IN_DAY) + 1} ({i % HOURS_IN_DAY + 1})"
-         for i in range(len(yearly_stats.index))]
+    x = []
+    for i in range(len(yearly_stats.index)):
+        x.append(f"{(i // HOURS_IN_DAY) + 1} ({i % HOURS_IN_DAY + 1})")
+        x.append(f"{(i // HOURS_IN_DAY) + 1} ({i % HOURS_IN_DAY + 1})")
+
     wanted_simulation_params = Params(**get_simulation_parameters(PARAMS_PATH))
     batter_eff = wanted_simulation_params.BATTERY_EFFICIENCY
     if HIDE_BATTERY_EFFICIENCY_LOSS:
         yearly_stats[SOLAR_LOST] = 0
+
     yearly_stats = yearly_stats.groupby(
         yearly_stats.index // num_hours_to_sum).sum()
-
-    # usage_sum = [solar + gas + stored for (solar, gas, stored) in zip(
-    #     yearly_stats[SOLAR_USAGE],
-    #     yearly_stats[GAS_USAGE],
-    #     yearly_stats[STORED_USAGE])]
 
     fig = make_subplots(rows=3, cols=1,
                         shared_xaxes=True, row_heights=[0.2, 0.3, 0.5],
@@ -102,31 +120,38 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
 
     usage_production_scatters = []
     for label in USAGE_PRODUCTION_LABELS:
-        usage_production_scatters.append(
-            go.Scatter(x=x, y=yearly_stats[label], name=NAMES[label],
-                       marker_color=COLORS[label],
-                       opacity=OPACITY, hoverinfo=HOVERINFO, mode=LINES,
-                       line=dict(width=WIDTH, color=COLORS[label]),
+        if not ((label == SOLAR_LOST) and HIDE_BATTERY_EFFICIENCY_LOSS):
+            usage_production_scatters.append(
+            go.Scatter(x=x, y=double_stat(yearly_stats[label]), name=NAMES[label],
+                       fillcolor=COLORS[label],
+                       fillpattern={'shape': FILL_PATTERN[label],
+                                    'fgcolor': "#FFFFFF"},
+                       opacity=OPACITY, hoverinfo=HOVERINFO,
+                       mode=LINES,
+                       line=dict(width=0, color=COLORS[label]),
                        stackgroup=STACKGROUP_ONE)
-        )
+            )
 
     buy_sell_scatters = []
     for label in BUY_SELL_LABELS:
         buy_sell_scatters.append(
-            go.Scatter(x=x, y=yearly_stats[label], name=NAMES[label],
-                       marker_color=COLORS[label],
+            go.Scatter(x=x, y=double_stat(yearly_stats[label]), name=NAMES[label],
+                       fillcolor=COLORS[label],
+                       fillpattern={'shape': FILL_PATTERN[label],
+                                    'fgcolor': "#FFFFFF"},
                        opacity=OPACITY, hoverinfo=HOVERINFO, mode=LINES,
-                       line=dict(width=WIDTH, color=COLORS[label]),
+                       line=dict(width=0, color=COLORS[label]),
                        stackgroup=STACKGROUP_ONE
                        )
         )
 
     battery_state_scatter = go.Scatter(
         x=x,
-        y=stored_state_stats(yearly_stats, batteries_cap),
+        y=double_stat(stored_state_stats(yearly_stats, batteries_num,
+                                         batteries_cap)),
         name=NAMES[STORED_STATE],
-        marker_color=COLORS[STORED_STATE],
-        opacity=OPACITY,
+        fillcolor=COLORS[STORED_STATE],
+        fillpattern={'shape': FILL_PATTERN[STORED_STATE], 'fgcolor': "#FFFFFF"},
         hoverinfo=HOVERINFO,
         mode=LINES,
         line=dict(width=WIDTH, color=COLORS[STORED_STATE]),
@@ -134,7 +159,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
     )
 
     usage_sum_scatter = go.Scatter(
-        x=x, y=shift_day_of_year(demand.df[demand.Demand], demand_year),
+        x=x, y=double_stat(shift_day_of_year(demand.df[demand.Demand], demand_year)),
         name=NAMES[USAGE_SUM],
         marker_color=COLORS[USAGE_SUM],
         opacity=OPACITY,
@@ -142,19 +167,19 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
         mode=LINES,
         line=dict(width=THICK_WIDTH, color=COLORS[USAGE_SUM], dash=DASH)
     )
-
-    fig.add_trace(battery_state_scatter,
-                  row=BATTERY_PLOT_POSITION[0],
-                  col=BATTERY_PLOT_POSITION[1]
-                  )
+    fig.add_traces(usage_production_scatters + [usage_sum_scatter],
+                   rows=USAGE_PRODUCTION_PLOT_POSITION[0],
+                   cols=USAGE_PRODUCTION_PLOT_POSITION[1])
 
     fig.add_traces(buy_sell_scatters,
                    rows=BUY_SELL_PLOT_POSITION[0],
                    cols=BUY_SELL_PLOT_POSITION[1]
                    )
-    fig.add_traces(usage_production_scatters + [usage_sum_scatter],
-                   rows=USAGE_PRODUCTION_PLOT_POSITION[0],
-                   cols=USAGE_PRODUCTION_PLOT_POSITION[1])
+
+    fig.add_trace(battery_state_scatter,
+                  row=BATTERY_PLOT_POSITION[0],
+                  col=BATTERY_PLOT_POSITION[1]
+                  )
 
     fig.update_xaxes(matches='x')
     # fig.update_xaxes(title_text="Day(hour)")
@@ -176,11 +201,12 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
     return fig
 
 
-def stored_state_stats(yearly_stats, batteries_cap):
+def stored_state_stats(yearly_stats, batteries_num, batteries_cap):
     stored_state = [get_collection(0, yearly_stats) - get_consumption(0, yearly_stats)]
     for i in range(1, len(yearly_stats.index)):
         difference = get_collection(i, yearly_stats) - get_consumption(i, yearly_stats)
         difference = normalize_battery(difference,
+                                       batteries_num,
                                        batteries_cap)
         stored_state.append(stored_state[i - 1] + difference)
 
@@ -201,14 +227,22 @@ def get_collection(index, yearly_stats):
     return collection
 
 
-def normalize_battery(num, batteries_cap):
-    return (100 * num) / batteries_cap
+def normalize_battery(num, batteries_num, batteries_cap):
+    return (100 * num) / (batteries_num * batteries_cap)
 
 
-def yearly_graph(yearly_stats: pd.DataFrame,
-                 batteries_cap, demand: DemandDf, demand_year, num_hours_to_sum=1):
-    yearly_graph_fig(yearly_stats,
-                     batteries_cap, demand, demand_year, num_hours_to_sum).show()
+def double_stat(stat):
+    doubled_stat = []
+    for i in range(len(stat) - 1):
+        doubled_stat.append(stat[i])
+        doubled_stat.append(stat[i+1])
+    return doubled_stat
+
+
+def yearly_graph(yearly_stats: pd.DataFrame, batteries_num, batteries_cap,
+                 demand: DemandDf, demand_year, num_hours_to_sum=1):
+    yearly_graph_fig(yearly_stats, batteries_num, batteries_cap, demand,
+                     demand_year, num_hours_to_sum).show()
 
 
 def daily_graph(daily_stats: pd.DataFrame):
