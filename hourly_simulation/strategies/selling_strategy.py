@@ -40,8 +40,9 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
     battery_efficiency = param.BATTERY_EFFICIENCY
     # Helpful definitions
     bin_cost = binary_cost_profile.df[binary_cost_profile.Cost].to_numpy()
-    production = shift_day_of_year(copy.deepcopy(production.df[production.SolarProduction].to_numpy()), 2020)  # overwriting
+    production = copy.deepcopy(production.df[production.SolarProduction].to_numpy())  # overwriting
     demand = shift_day_of_year(copy.deepcopy(demand.df[demand.Demand].to_numpy()), predict_demand_in_year)  # shift demand to start on sunday
+    cost_profile = shift_day_of_year(copy.deepcopy(cost_profile.df[cost_profile.Cost]).to_numpy(), 2018)
     # production = copy.deepcopy(production.df[production.SolarProduction].to_numpy())
     # demand = copy.deepcopy(demand.df[demand.Demand].to_numpy())
     day_use = {c: np.zeros(len(demand)) for c in ElectricityUseDf.COLUMNS}
@@ -79,9 +80,9 @@ def day_with_expansive_hours(expensive_hours, day_index, demand, production, day
                                                         battery_power, day_use)
     if get_is_buying_profitable(battery_efficiency, binary_cost_profile, get_index(day_index, cheap_hours[0]),
                                 get_index(day_index, expensive_hours[0]), cost_profile, sell_profile):
-        total_stored = buy_in_cheap_hours(battery_capacity, expansive_completion, expensive_hours, total_stored,
+        total_stored = buy_in_cheap_hours(battery_capacity, expansive_completion, cheap_hours, total_stored,
                                           day_index,
-                                          battery_power, day_use)
+                                          battery_power, day_use, sell_profile)
     total_stored = fill_expansive_hours(expensive_hours, day_index, demand, battery_power, day_use,
                                         total_stored, expansive_use_completion, sale_max_power, sell_profile)
     fill_cheap_hours(cheap_hours, day_index, production, demand, sale_max_power, day_use)
@@ -122,12 +123,12 @@ def store_overproduction_to_fill_battery(expensive_hours, total_stored, battery_
     return total_stored
 
 
-def buy_in_cheap_hours(battery_capacity, expansive_completion, expensive_hours, total_stored, day_index, battery_power, day_use):
+def buy_in_cheap_hours(battery_capacity, expansive_completion, cheap_hours, total_stored, day_index, battery_power, day_use, sell_profile):
     effective_battery_capacity = min(battery_capacity, expansive_completion)
-    for hour_index in range(expensive_hours[0] - 1, -1, -1):
+    for i in ordered_cheap_hours(cheap_hours, sell_profile, day_index):
         if total_stored >= effective_battery_capacity:
             break
-        i = get_index(day_index, hour_index)
+        # i = get_index(day_index, hour_index)
         solar_buy = min(battery_power - day_use[ElectricityUseDf.SolarStored][i], effective_battery_capacity
                         - total_stored)
         total_stored += solar_buy
@@ -189,7 +190,7 @@ def no_expansive_hours_day(demand, production, day_index, battery_capacity, tota
 
 
 def get_is_buying_profitable(battery_efficiency, binary_cost_profile, low_index, peak_index,  cost_profile, sell_profile):
-    low_buy_price = cost_profile.df[cost_profile.Cost].loc[low_index]
+    low_buy_price = cost_profile[low_index]
     peak_sell_price = sell_profile.df[sell_profile.Cost].loc[peak_index]
     return low_buy_price  < peak_sell_price * battery_efficiency
 
@@ -216,6 +217,11 @@ def ordered_hours(hours, sell_profile, day_index):
     return [get_index(day_index, i) for i in ordered_hours]
 
 
+def ordered_cheap_hours(hours, sell_profile, day_index, threshold_day=20):
+    early_hours = [i for i in hours if i < threshold_day] # to buy before the expansive hours
+    return ordered_hours(early_hours, sell_profile, day_index)
+
+
 def round_array(arr, decimal):
     new_arr = copy.deepcopy(arr)
     print(new_arr)
@@ -225,6 +231,7 @@ def round_array(arr, decimal):
             new_arr[i] = 0
 
     return new_arr
+
 
 
 
