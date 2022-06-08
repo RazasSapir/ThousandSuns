@@ -109,7 +109,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
     wanted_simulation_params = Params(**get_simulation_parameters(PARAMS_PATH))
     batter_eff = wanted_simulation_params.BATTERY_EFFICIENCY
     if HIDE_BATTERY_EFFICIENCY_LOSS:
-        yearly_stats[SOLAR_LOST] = 0
+        yearly_stats[SOLAR_LOST] -= yearly_stats[SOLAR_STORED] / batter_eff * (1 - batter_eff)
 
     yearly_stats = yearly_stats.groupby(
         yearly_stats.index // num_hours_to_sum).sum()
@@ -120,8 +120,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
 
     usage_production_scatters = []
     for label in USAGE_PRODUCTION_LABELS:
-        if not ((label == SOLAR_LOST) and HIDE_BATTERY_EFFICIENCY_LOSS):
-            usage_production_scatters.append(
+        usage_production_scatters.append(
             go.Scatter(x=x, y=double_stat(yearly_stats[label]), name=NAMES[label],
                        fillcolor=COLORS[label],
                        fillpattern={'shape': FILL_PATTERN[label],
@@ -130,7 +129,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
                        mode=LINES,
                        line=dict(width=0, color=COLORS[label]),
                        stackgroup=STACKGROUP_ONE)
-            )
+        )
 
     buy_sell_scatters = []
     for label in BUY_SELL_LABELS:
