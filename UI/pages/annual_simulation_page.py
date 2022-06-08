@@ -155,7 +155,7 @@ def run_simulation(n_clicks, num_batteries, solar_panel_power_mw, simulated_year
                                                  battery_capacity=params.BATTERY_CAPACITY * num_batteries,
                                                  solar_panel_power_kw=solar_panel_power_kw, return_description=True)
     return yearly_graph_fig(electricity_use.df,
-                            params.BATTERY_CAPACITY * num_batteries, demand,
+                            params.BATTERY_CAPACITY * num_batteries * params.BATTERY_EFFECTIVE_SIZE, demand,
                             num_hours_to_sum=1,
                             demand_year=demand.YearOfDemand), False, format_price_description(description)
 

@@ -38,7 +38,7 @@ NAMES = {
     SOLAR_USAGE: 'Solar Energy Consumption',
     STORED_USAGE: 'Stored Solar Energy Consumption',
     SOLAR_STORED: 'Stored Solar Energy',
-    # SOLAR_LOST: 'Lost Solar Energy',
+    SOLAR_LOST: 'Lost Solar Energy',
     STORED_STATE: 'Batteries Charge',
     USAGE_SUM: 'Total Energy Consumption',
     SOLAR_SOLD: "Solar Energy Sold",
@@ -98,7 +98,7 @@ HOURS_IN_DAY = 24
 
 # todo: add docstring and docstring
 def yearly_graph_fig(yearly_stats: pd.DataFrame,
-                     batteries_cap, demand: DemandDf, demand_year,
+                     batteries_effecitive_cap, demand: DemandDf, demand_year,
                      num_hours_to_sum=1):
     yearly_stats = copy.deepcopy(yearly_stats)
     x = []
@@ -147,7 +147,7 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
 
     battery_state_scatter = go.Scatter(
         x=x,
-        y=double_stat(stored_state_stats(yearly_stats, batteries_cap)),
+        y=double_stat(stored_state_stats(yearly_stats, batteries_effecitive_cap)),
         name=NAMES[STORED_STATE],
         fillcolor=COLORS[STORED_STATE],
         fillpattern={'shape': FILL_PATTERN[STORED_STATE], 'fgcolor': "#FFFFFF"},
@@ -200,15 +200,15 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
     return fig
 
 
-def stored_state_stats(yearly_stats, batteries_cap):
-    if batteries_cap == 0:
+def stored_state_stats(yearly_stats, batteries_effective_cap):
+    if batteries_effective_cap == 0:
         return [0] * len(yearly_stats.index)
     stored_state = [
-        normalize_battery(get_collection(0, yearly_stats) - get_consumption(0, yearly_stats), batteries_cap)]
+        normalize_battery(get_collection(0, yearly_stats) - get_consumption(0, yearly_stats), batteries_effective_cap)]
     for i in range(1, len(yearly_stats.index)):
         difference = get_collection(i, yearly_stats) - get_consumption(i, yearly_stats)
         difference = normalize_battery(difference,
-                                       batteries_cap)
+                                       batteries_effective_cap)
         stored_state.append(stored_state[-1] + difference)
 
     return stored_state
@@ -228,8 +228,8 @@ def get_collection(index, yearly_stats):
     return collection
 
 
-def normalize_battery(num, batteries_cap):
-    return (100 * num) / batteries_cap
+def normalize_battery(num, batteries_effective_cap):
+    return (100 * num) / batteries_effective_cap
 
 
 def double_stat(stat):
@@ -242,7 +242,7 @@ def double_stat(stat):
 
 def yearly_graph(yearly_stats: pd.DataFrame, batteries_num, batteries_cap,
                  demand: DemandDf, demand_year, num_hours_to_sum=1):
-    yearly_graph_fig(yearly_stats, batteries_num, batteries_cap, demand,
+    yearly_graph_fig(yearly_stats, batteries_cap, demand,
                      demand_year, num_hours_to_sum).show()
 
 

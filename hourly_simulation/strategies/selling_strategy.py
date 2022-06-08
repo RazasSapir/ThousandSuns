@@ -43,7 +43,9 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
     production = copy.deepcopy(production.df[production.SolarProduction].to_numpy())  # overwriting
     demand = shift_day_of_year(copy.deepcopy(demand.df[demand.Demand].to_numpy()),
                                predict_demand_in_year)  # shift demand to start on sunday
+    hour_of_year = sell_profile.df[CostElectricityDf.HourOfYear] # to use later in the returned df
     cost_profile = shift_day_of_year(copy.deepcopy(cost_profile.df[cost_profile.Cost]).to_numpy(), 2018)
+    sell_profile = shift_day_of_year(copy.deepcopy(sell_profile.df[sell_profile.Cost]).to_numpy(), 2018)
     # production = copy.deepcopy(production.df[production.SolarProduction].to_numpy())
     # demand = copy.deepcopy(demand.df[demand.Demand].to_numpy())
     day_use = {c: np.zeros(len(demand)) for c in ElectricityUseDf.COLUMNS}
@@ -65,7 +67,7 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
         else:
             total_stored = no_expansive_hours_day(demand, production, day_index, battery_capacity, total_stored,
                                                   sale_max_power, battery_efficiency, battery_power, day_use)
-    return combine_to_df(day_use, sell_profile)
+    return combine_to_df(day_use, hour_of_year)
 
 
 def day_with_expansive_hours(expensive_hours, day_index, demand, production, day_use, sale_max_power,
@@ -85,7 +87,7 @@ def day_with_expansive_hours(expensive_hours, day_index, demand, production, day
                                 get_index(day_index, expensive_hours[0]), cost_profile, sell_profile):
         total_stored = buy_in_cheap_hours(battery_capacity, expansive_completion, cheap_hours, total_stored,
                                           day_index,
-                                          battery_power, day_use, sell_profile)
+                                          battery_power, day_use, sell_profile, cost_profile)
     total_stored = fill_expansive_hours(expensive_hours, day_index, demand, battery_power, day_use,
                                         total_stored, expansive_use_completion, sale_max_power, sell_profile)
     fill_cheap_hours(cheap_hours, day_index, production, demand, sale_max_power, day_use)
@@ -129,9 +131,10 @@ def store_overproduction_to_fill_battery(expensive_hours, total_stored, battery_
 
 
 def buy_in_cheap_hours(battery_capacity, expansive_completion, cheap_hours, total_stored, day_index, battery_power,
-                       day_use, sell_profile):
+                       day_use, sell_profile, cost_profile):
     effective_battery_capacity = min(battery_capacity, expansive_completion)
-    for i in ordered_cheap_hours(cheap_hours, sell_profile, day_index):
+    for i in ordered_cheap_hours(cheap_hours, cost_profile, day_index):
+        # print(f"energy bought in hour {i}", end=" ")
         # i = get_index(day_index, hour_index)
         if total_stored >= effective_battery_capacity:
             break
@@ -202,11 +205,11 @@ def no_expansive_hours_day(demand, production, day_index, battery_capacity, tota
 def get_is_buying_profitable(battery_efficiency, binary_cost_profile, low_index, peak_index, cost_profile,
                              sell_profile):
     low_buy_price = cost_profile[low_index]
-    peak_sell_price = sell_profile.df[sell_profile.Cost].loc[peak_index]
+    peak_sell_price = sell_profile[peak_index]
     return low_buy_price < peak_sell_price * battery_efficiency
 
 
-def combine_to_df(day_use, sell_profile):
+def combine_to_df(day_use, hour_of_year):
     hourly_use = ElectricityUseDf(pd.DataFrame())
     hourly_use.df[hourly_use.GasUsage] = day_use[ElectricityUseDf.GasUsage]
     hourly_use.df[hourly_use.SolarUsage] = day_use[ElectricityUseDf.SolarUsage]
@@ -216,23 +219,23 @@ def combine_to_df(day_use, sell_profile):
     hourly_use.df[hourly_use.SolarSold] = day_use[ElectricityUseDf.SolarSold]
     hourly_use.df[hourly_use.StoredSold] = day_use[ElectricityUseDf.StoredSold]
     hourly_use.df[hourly_use.GasStored] = day_use[ElectricityUseDf.GasStored]
-    hourly_use.df[hourly_use.HourOfYear] = sell_profile.df[CostElectricityDf.HourOfYear]
+    hourly_use.df[hourly_use.HourOfYear] = hour_of_year
     return hourly_use
 
 
-def ordered_hours(hours, sell_profile, day_index):
-    daily_sell_profile = [sell_profile.df[sell_profile.Cost].loc[get_index(day_index, i)] for i in hours]
+def ordered_hours(hours, sell_profile, day_index, reverse=True):
+    daily_sell_profile = [sell_profile[get_index(day_index, i)] for i in hours]
     # print(f"day = {day_index}, unordered indices = {hours}", end="   ")
     # print(f"ordered indices = {[val for _, val in sorted(zip(daily_sell_profile, hours))]}")
-    ordered_hours = [val for _, val in sorted(zip(daily_sell_profile, hours))]
-    return [get_index(day_index, i) for i in ordered_hours]
-    # print(f"in day {day_index} daily sell profile = {daily_sell_profile}, and sorted hours = {[get_index(day_index, i) for i in ordered_hours]}")
+    ordered_hours_array = [val for _, val in sorted(zip(daily_sell_profile, hours), reverse=reverse)]
+    print(f"in day {day_index} daily sell profile = {daily_sell_profile},\n hours are = {hours} \n and sorted hours = {[get_index(day_index, i) for i in ordered_hours_array]}")
+    return [get_index(day_index, i) for i in ordered_hours_array]
     # return [get_index(day_index, i) for i in hours]
 
 
-def ordered_cheap_hours(hours, sell_profile, day_index, threshold_day=20):
+def ordered_cheap_hours(hours, cost_profile, day_index, threshold_day=20):
     early_hours = [i for i in hours if i < threshold_day]  # to buy before the expansive hours
-    return ordered_hours(early_hours, sell_profile, day_index)
+    return ordered_hours(early_hours, cost_profile, day_index, reverse=False)
     # return hours
 
 
