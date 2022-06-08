@@ -132,6 +132,7 @@ def buy_in_cheap_hours(battery_capacity, expansive_completion, cheap_hours, tota
                        day_use, sell_profile):
     effective_battery_capacity = min(battery_capacity, expansive_completion)
     for i in ordered_cheap_hours(cheap_hours, sell_profile, day_index):
+        # i = get_index(day_index, hour_index)
         if total_stored >= effective_battery_capacity:
             break
         # i = get_index(day_index, hour_index)
@@ -146,6 +147,7 @@ def fill_expansive_hours(expensive_hours, day_index, demand, battery_power, day_
                          expansive_use_completion, sale_max_power, sell_profile):
     expansive_sell_completion = total_stored - expansive_use_completion
     for i in ordered_hours(expensive_hours, sell_profile, day_index):
+        # i = get_index(day_index, hour_index)
         stored_used = min(demand[i], battery_power, total_stored)
         total_stored -= stored_used
         day_use[ElectricityUseDf.StoredUsage][i] = stored_used
@@ -224,11 +226,14 @@ def ordered_hours(hours, sell_profile, day_index):
     # print(f"ordered indices = {[val for _, val in sorted(zip(daily_sell_profile, hours))]}")
     ordered_hours = [val for _, val in sorted(zip(daily_sell_profile, hours))]
     return [get_index(day_index, i) for i in ordered_hours]
+    # print(f"in day {day_index} daily sell profile = {daily_sell_profile}, and sorted hours = {[get_index(day_index, i) for i in ordered_hours]}")
+    # return [get_index(day_index, i) for i in hours]
 
 
 def ordered_cheap_hours(hours, sell_profile, day_index, threshold_day=20):
     early_hours = [i for i in hours if i < threshold_day]  # to buy before the expansive hours
     return ordered_hours(early_hours, sell_profile, day_index)
+    # return hours
 
 
 def round_array(arr, decimal):
