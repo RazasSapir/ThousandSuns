@@ -54,7 +54,7 @@ simulation_params = Params(**__simulation_params_dict)
 
 # Electricity
 
-ELECTRICITY_COST_PATH = 'data/electricity_cost.csv'
+ELECTRICITY_COST_PATH = 'data/electricity_cost_gaussian.csv'
 ELECTRICITY_COST_BINARY_PATH = 'data/shifted_electricity_cost_binary.csv'
 ELECTRICITY_SELLING_INCOME_PATH = 'data/electricity_sell_gaussian.csv'
 ELECTRICITY_COST = CostElectricityDf(pd.read_csv(ELECTRICITY_COST_PATH, index_col=0))
