@@ -147,11 +147,11 @@ def test_selling_limit_not_passed(electricity_use: ElectricityUseDf, selling_lim
     Makes sure the charge power is not passed
 
     :param electricity_use: ElectricityUseDf pd.DataFrame(columns=['HourOfYear', 'GasUsage', 'GasStored', 'SolarUsage',
-        'StoredUsage', 'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
+        'StoredUsage', 'SolarStored', 'SolarLost', 'SolarSold' ,'StoredSold'])
     :param selling_limit: the maximum selling power of the battery
     :return:
     """
     assert (abs(electricity_use.df[electricity_use.SolarSold] +
-                electricity_use.df[
-                    electricity_use.StoredSold]) < selling_limit + epsilon).values.all(), "Selling power limit was passed"
+                electricity_use.df[electricity_use.StoredSold]) <
+            selling_limit + epsilon).values.all(), "Selling power limit was passed"
     logging.info("passed test_selling_limit_not_passed")
