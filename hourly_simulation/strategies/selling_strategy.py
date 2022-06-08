@@ -146,7 +146,7 @@ def fill_expansive_hours(expensive_hours, day_index, demand, battery_power, day_
                          expansive_use_completion, sale_max_power, sell_profile):
     expansive_sell_completion = total_stored - expansive_use_completion
     for i in ordered_hours(expensive_hours, sell_profile, day_index):
-        stored_used = min(demand[i], battery_power - day_use[ElectricityUseDf.SolarSold][i], total_stored)
+        stored_used = min(demand[i], battery_power, total_stored)
         total_stored -= stored_used
         day_use[ElectricityUseDf.StoredUsage][i] = stored_used
         if expansive_sell_completion > 0:  # in case that the stored power won't last to the last expansive hour

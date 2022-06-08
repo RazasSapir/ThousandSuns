@@ -80,7 +80,6 @@ def test_production_is_used(production: pd.Series, electricity_use: ElectricityU
     #         print(f"in index {i}, difference = {should_be_production[i] - production[i]}, (lost + stored) * (1-battery_efficiency) = "
     #               f"{(electricity_use.df[electricity_use.SolarLost][i] + electricity_use.df[electricity_use.SolarStored][i])*0.13}")
 
-
     assert (abs(should_be_production - production) < epsilon).values.all(), "Not all production was used"
     logging.info("passed test_production_is_used")
 
@@ -107,7 +106,7 @@ def test_battery_capacity_is_not_passed(electricity_use: ElectricityUseDf, batte
     Makes sure the battery capacity is not passed
 
     :param electricity_use: ElectricityUseDf pd.DataFrame(columns=['HourOfYear', 'GasUsage', 'GasStored', 'SolarUsage',
-        'StoredUsage', 'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
+        'StoredUsage', 'SolarStored', 'SolarLost', 'SolarSold', 'StoredSold'])
     :param battery_capacity: the maximum capacity of the battery
     :param epsilon: small number to account for computational errors
     :return: None
@@ -152,6 +151,6 @@ def test_selling_limit_not_passed(electricity_use: ElectricityUseDf, selling_lim
     :return:
     """
     assert (abs(electricity_use.df[electricity_use.SolarSold] +
-                electricity_use.df[
-                    electricity_use.StoredSold]) < selling_limit + epsilon).values.all(), "Selling power limit was passed"
+                electricity_use.df[electricity_use.StoredSold]) < selling_limit + epsilon).values.all(), \
+        "Selling power limit was passed"
     logging.info("passed test_selling_limit_not_passed")
