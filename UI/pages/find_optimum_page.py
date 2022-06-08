@@ -1,3 +1,4 @@
+import traceback
 from multiprocessing.pool import ThreadPool
 
 import dash_bootstrap_components as dbc
@@ -150,6 +151,7 @@ def run_optimal_simulation(n_clicks, n_batteries_min, n_batteries_max, n_batteri
             normalised_production.SolarProduction].max()
         wanted_simulation_params = Params(**get_simulation_parameters(PARAMS_PATH))
     except Exception as e:
+        logging.error(traceback.format_exc())
         return {}, "", "", {}, False, True
 
     arguments = {'demand': demand,

@@ -28,7 +28,8 @@ def get_solar_production_profile(normalised_production: ProductionDf, solar_pane
 
 
 def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_capacity: float,
-                   solar_panel_power_kw: float) -> float:
+                   solar_panel_power_kw: float,
+                   return_description=False):  # -> Optional[float, Tuple[float, Tuple[Any]]]:
     """
     Calculates the cost of  electricity_use
 
@@ -80,6 +81,10 @@ def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_ca
     # sum the cost
     total_cost = total_gas_cost + total_init_capex + total_opex + future_battery_capex - total_selling_income + \
                  capital_expenses + entrepreneur_profit
+    if return_description:
+        return total_cost, ((total_cost, total_gas_cost, total_solar_capex, total_battery_capex,
+                             future_battery_capex, total_solar_opex, total_battery_opex,
+                             capital_expenses, entrepreneur_profit, total_selling_income,))
     return total_cost
 
 

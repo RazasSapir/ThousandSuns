@@ -8,11 +8,12 @@ from waitress import serve
 from UI.main import app
 
 WAIT_FOR_SERVER_MS = 100
+NUM_THREADS = 8
 finished_set_up = False
 
 
 def server_run():
-    serve(app.server)
+    serve(app.server, threads=NUM_THREADS)
 
 
 def wait_bar():
@@ -21,6 +22,7 @@ def wait_bar():
     while not finished_set_up:
         print(animation[idx % len(animation)], end="\r")
         idx += 1
+        idx %= len(animation)
         time.sleep(0.1)
 
 

@@ -38,7 +38,8 @@ def test_non_negative(electricity_use: ElectricityUseDf, epsilon: float) -> None
         'StoredUsage', 'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
     :return: None
     """
-    assert not (electricity_use.df < 0).values.any(), "Found Negative value"
+    assert not (electricity_use.df < -epsilon).values.any(), "Found Negative value: " + str(
+        electricity_use.df.min().min())
     logging.info("Passed test_non_negative")
 
 

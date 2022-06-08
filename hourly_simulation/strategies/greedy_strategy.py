@@ -1,8 +1,11 @@
+import copy
+
 import numpy as np
 import pandas as pd
 
 from df_objects.df_objects import DemandDf, ProductionDf, ElectricityUseDf
 from hourly_simulation.parameters import Params
+from hourly_simulation.shift_day_in_year import shift_day_of_year
 
 
 def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Params,
@@ -19,11 +22,13 @@ def greedy_use_strategy(demand: DemandDf, production: ProductionDf, params: Para
     :return: ElectricityUseDf pd.DataFrame(columns=['HourOfYear', 'GasUsage', 'GasStored', 'SolarUsage', 'StoredUsage',
                 'SolarStored', 'SolarLost', 'SolarSold' , 'StoredSold'])
     """
+    demand_shifted = shift_day_of_year(copy.deepcopy(demand.df[demand.Demand].to_numpy()),
+                                       predict_demand_in_year)  # shift demand to start on sunday
     gas_usage_arr, solar_usage_arr, stored_usage_arr, solar_stored_arr, solar_lost_arr = __greedy_use_loop(
         num_batteries * params.BATTERY_CAPACITY * params.BATTERY_EFFECTIVE_SIZE,
         num_batteries * params.CHARGE_POWER,
         params.BATTERY_EFFICIENCY,
-        demand.df[demand.Demand].to_numpy(),
+        demand_shifted,
         production.df[production.SolarProduction].to_numpy())
 
     hourly_use = ElectricityUseDf(pd.DataFrame())

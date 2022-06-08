@@ -201,6 +201,8 @@ def yearly_graph_fig(yearly_stats: pd.DataFrame,
 
 
 def stored_state_stats(yearly_stats, batteries_cap):
+    if batteries_cap == 0:
+        return [0] * len(yearly_stats.index)
     stored_state = [
         normalize_battery(get_collection(0, yearly_stats) - get_consumption(0, yearly_stats), batteries_cap)]
     for i in range(1, len(yearly_stats.index)):
