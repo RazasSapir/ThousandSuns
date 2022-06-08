@@ -228,7 +228,7 @@ def ordered_hours(hours, sell_profile, day_index, reverse=True):
     # print(f"day = {day_index}, unordered indices = {hours}", end="   ")
     # print(f"ordered indices = {[val for _, val in sorted(zip(daily_sell_profile, hours))]}")
     ordered_hours_array = [val for _, val in sorted(zip(daily_sell_profile, hours), reverse=reverse)]
-    print(f"in day {day_index} daily sell profile = {daily_sell_profile},\n hours are = {hours} \n and sorted hours = {[get_index(day_index, i) for i in ordered_hours_array]}")
+    # print(f"in day {day_index} daily sell profile = {daily_sell_profile},\n hours are = {hours} \n and sorted hours = {[get_index(day_index, i) for i in ordered_hours_array]}")
     return [get_index(day_index, i) for i in ordered_hours_array]
     # return [get_index(day_index, i) for i in hours]
 
