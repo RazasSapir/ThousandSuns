@@ -55,12 +55,10 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
         # iterate expensive hours and use all the production for the demand
         expensive_hours = [i for i, x in enumerate(bin_cost[day_index * 24: (day_index + 1) * 24]) if x == 1]
         cheap_hours = [i for i, x in enumerate(bin_cost[day_index * 24: (day_index + 1) * 24]) if x == 0]
-        expansive_completion = 0
-        expansive_use_completion = 0
         if not len(expensive_hours) == 0:
             total_stored = day_with_expansive_hours(expensive_hours, day_index, demand, production, day_use,
-                                                    sale_max_power, expansive_completion, battery_power,
-                                                    expansive_use_completion, total_stored,
+                                                    sale_max_power, battery_power,
+                                                    total_stored,
                                                     battery_capacity, battery_efficiency, binary_cost_profile,
                                                     cheap_hours, cost_profile,
                                                     sell_profile)
@@ -71,9 +69,29 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
 
 
 def day_with_expansive_hours(expensive_hours, day_index, demand, production, day_use, sale_max_power,
-                             expansive_completion, battery_power, expansive_use_completion, total_stored,
+                             battery_power, total_stored,
                              battery_capacity, battery_efficiency, binary_cost_profile, cheap_hours, cost_profile,
-                             sell_profile):
+                             sell_profile) -> float:
+    """
+    @param expensive_hours: list of indexes of the expansive hours in the current day
+    @param day_index: index of the current day
+    @param demand: list of the demand for every hour in the year
+    @param production: list of the solar production (for all the panels combined) for every hour in the year
+    @param day_use: dictionary with the energy lists names as keys (solar usage, solar sold...), and the list to fill throughout the simulation
+    @param sale_max_power: maximum power to sell back to the IEC
+    @param expansive_completion: amount of kwh to fill in cheap hours to cover the demand and selling in expansive hours (to be filled in this function)
+    @param battery_power: maximum power to charge and discharge from the batteries
+    @param expansive_use_completion:
+    @param total_stored: the total energy in the batteries, until the current day
+    @param battery_capacity: the batteries capacity (all of them combined)
+    @param battery_efficiency: the ratio between the energy used for charging, to the energy charged
+    @param binary_cost_profile: binary classification of all the hours in the year, to expansive and cheap hours
+    @param cheap_hours: list of indexes of the cheap hours in the current day
+    @param cost_profile: list of the buying cost per kwh for each hour in the year
+    @param sell_profile: list of the selling cost per kwh for each hour in the year
+    @return: total_stored: updated total stored, after current day
+    """
+    expansive_completion, expansive_use_completion = (0, 0)
     expansive_completion, expansive_use_completion = get_affective_expansive_demand(expensive_hours, day_index,
                                                                                     demand, production, day_use,
                                                                                     sale_max_power,
