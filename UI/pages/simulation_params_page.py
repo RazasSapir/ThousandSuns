@@ -24,6 +24,8 @@ def get_layout():
             type="default",
             children=[html.H2("Default Parameters", id="saved_status")]
         ),
+        html.Br(),
+        html.P("Created by Ariel Sheffer, Raz Sapir, Tomer Ringler, Roy Jacob Fanani, and Noam Broza."),
     ])
 
 
