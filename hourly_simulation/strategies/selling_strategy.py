@@ -75,6 +75,7 @@ def day_with_expansive_hours(expensive_hours, day_index, demand, production, day
                              battery_capacity, battery_efficiency, binary_cost_profile, cheap_hours, cost_profile,
                              sell_profile):
     """
+    fill demand and selling in a day with expansive hours
     @param expensive_hours: list of indexes of the expansive hours in the current day
     @param day_index: index of the current day
     @param demand: list of the demand for every hour in the year
@@ -115,7 +116,7 @@ def day_with_expansive_hours(expensive_hours, day_index, demand, production, day
 def get_affective_expansive_demand(expensive_hours, day_index, demand, production, day_use, sale_max_power,
                                    expansive_completion, battery_power, expansive_use_completion):
     """
-
+    get energy to be filled in cheap hours to answer demand and selling in expansive hours
     @param expensive_hours: list of indexes of the expansive hours in the current day
     @param day_index: index of the current day
     @param demand: list of the demand for every hour in the year
@@ -147,7 +148,7 @@ def get_affective_expansive_demand(expensive_hours, day_index, demand, productio
 def store_overproduction_to_fill_battery(expensive_hours, total_stored, battery_capacity, day_index, demand, production,
                                          battery_efficiency, battery_power, day_use):
     """
-
+    go through cheap hours, store the overproduction to fill battery
     @param expensive_hours: list of indexes of the expansive hours in the current day
     @param total_stored: the total energy in the batteries, until the current day
     @param battery_capacity: the batteries' capacity (all of them combined)
@@ -177,7 +178,7 @@ def store_overproduction_to_fill_battery(expensive_hours, total_stored, battery_
 def buy_in_cheap_hours(battery_capacity, expansive_completion, cheap_hours, total_stored, day_index, battery_power,
                        day_use, sell_profile, cost_profile):
     """
-
+    go through cheap hours, buy and store to answer the expansive completion
     @param battery_capacity: the batteries' capacity (all of them combined)
     @param expansive_completion: amount of kwh to fill in cheap hours to cover the demand and selling in expansive hours
     @param cheap_hours: list of indexes of the cheap hours in the current day
@@ -206,7 +207,7 @@ def buy_in_cheap_hours(battery_capacity, expansive_completion, cheap_hours, tota
 def fill_expansive_hours(expensive_hours, day_index, demand, battery_power, day_use, total_stored,
                          expansive_use_completion, sale_max_power, sell_profile):
     """
-
+    go through expansive hours, fill the demand and sell (if profitable) the stored energy
     @param expensive_hours: list of indexes of the expansive hours in the current day
     @param day_index: index of the current day
     @param demand: list of the demand for every hour in the year
@@ -238,7 +239,7 @@ def fill_expansive_hours(expensive_hours, day_index, demand, battery_power, day_
 
 def fill_cheap_hours(cheap_hours, day_index, production, demand, sale_max_power, day_use):
     """
-
+    go through cheap hours, use solar production, sell if possible and buy if necessary
     @param cheap_hours: list of indexes of the cheap hours in the current day
     @param day_index: index of the current day
     @param production: list of the solar production (for all the panels combined) for every hour in the year
@@ -260,7 +261,7 @@ def fill_cheap_hours(cheap_hours, day_index, production, demand, sale_max_power,
 def no_expansive_hours_day(demand, production, day_index, battery_capacity, total_stored, sale_max_power,
                            battery_efficiency, battery_power, day_use):
     """
-
+    fill demand and selling in a day with no expansive hours
     @param demand: list of the demand for every hour in the year
     @param production: list of the solar production (for all the panels combined) for every hour in the year
     @param day_index: index of the current day
@@ -298,7 +299,7 @@ def no_expansive_hours_day(demand, production, day_index, battery_capacity, tota
 def get_is_buying_profitable(battery_efficiency, binary_cost_profile, low_index, peak_index, cost_profile,
                              sell_profile):
     """
-
+    checks if it is profitable to buy and store energy in cheap hours to sell in expansive hours
     @param battery_efficiency: the ratio between the energy used for charging, to the energy charged
     @param binary_cost_profile: binary classification of all the hours in the year, to expansive and cheap hours
     @param low_index: index of cheap hour
@@ -314,7 +315,7 @@ def get_is_buying_profitable(battery_efficiency, binary_cost_profile, low_index,
 
 def combine_to_df(day_use, hour_of_year):
     """
-
+    combine the list in day_use (simulation result) to ElectricityUseDf
     @param day_use: dictionary with the energy lists names as keys (solar usage, solar sold...), and the lists that were filled throughout the simulation
     @param hour_of_year: list of hours for every matching value in day use (basically the indexes plus 1)
     @return: ElectricityUseDf of the data simulated
@@ -334,7 +335,7 @@ def combine_to_df(day_use, hour_of_year):
 
 def ordered_hours(hours, sell_profile, day_index, reverse=True):
     """
-
+    order hours by their selling costs
     @param hours: list of hours
     @param sell_profile: list of the selling cost per kwh for each hour in the year
     @param day_index: index of the current day
@@ -348,7 +349,7 @@ def ordered_hours(hours, sell_profile, day_index, reverse=True):
 
 def ordered_cheap_hours(hours, cost_profile, day_index, threshold_hour=20):
     """
-
+    order cheap hours by their selling costs, in ascending order
     @param hours: list of hours
     @param cost_profile: list of the buying cost per kwh for each hour in the year
     @param day_index: index of the current day
@@ -360,6 +361,12 @@ def ordered_cheap_hours(hours, cost_profile, day_index, threshold_hour=20):
 
 
 def round_array(arr, decimal):
+    """
+    rounds float in a list
+    @param arr: a list of floats
+    @param decimal: number of digit to round from
+    @return: rounded list
+    """
     new_arr = copy.deepcopy(arr)
     for i in range(len(new_arr)):
         if 0 < abs(new_arr[i]) < 10 ^ (-decimal):
