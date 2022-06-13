@@ -1,4 +1,6 @@
 import copy
+import typing
+from typing import Tuple
 
 import numpy as np
 import pandas as pd
@@ -71,19 +73,17 @@ def first_selling_strategy(demand: DemandDf, production: ProductionDf, param: Pa
 def day_with_expansive_hours(expensive_hours, day_index, demand, production, day_use, sale_max_power,
                              battery_power, total_stored,
                              battery_capacity, battery_efficiency, binary_cost_profile, cheap_hours, cost_profile,
-                             sell_profile) -> float:
+                             sell_profile):
     """
     @param expensive_hours: list of indexes of the expansive hours in the current day
     @param day_index: index of the current day
     @param demand: list of the demand for every hour in the year
     @param production: list of the solar production (for all the panels combined) for every hour in the year
-    @param day_use: dictionary with the energy lists names as keys (solar usage, solar sold...), and the list to fill throughout the simulation
+    @param day_use: dictionary with the energy lists names as keys (solar usage, solar sold...), and the lists to fill throughout the simulation
     @param sale_max_power: maximum power to sell back to the IEC
-    @param expansive_completion: amount of kwh to fill in cheap hours to cover the demand and selling in expansive hours (to be filled in this function)
     @param battery_power: maximum power to charge and discharge from the batteries
-    @param expansive_use_completion:
     @param total_stored: the total energy in the batteries, until the current day
-    @param battery_capacity: the batteries capacity (all of them combined)
+    @param battery_capacity: the batteries' capacity (all of them combined)
     @param battery_efficiency: the ratio between the energy used for charging, to the energy charged
     @param binary_cost_profile: binary classification of all the hours in the year, to expansive and cheap hours
     @param cheap_hours: list of indexes of the cheap hours in the current day
@@ -114,6 +114,19 @@ def day_with_expansive_hours(expensive_hours, day_index, demand, production, day
 
 def get_affective_expansive_demand(expensive_hours, day_index, demand, production, day_use, sale_max_power,
                                    expansive_completion, battery_power, expansive_use_completion):
+    """
+
+    @param expensive_hours: list of indexes of the expansive hours in the current day
+    @param day_index: index of the current day
+    @param demand: list of the demand for every hour in the year
+    @param production: list of the solar production (for all the panels combined) for every hour in the year
+    @param day_use: dictionary with the energy lists names as keys (solar usage, solar sold...), and the lists to fill throughout the simulation
+    @param sale_max_power: maximum power to sell back to the IEC
+    @param expansive_completion: amount of kwh to fill in cheap hours to cover the demand and selling in expansive hours
+    @param battery_power:
+    @param expansive_use_completion: amount of kwh to fill in cheap hours to cover only the selling in expansive hours
+    @return: updated expansive_completion and expansive_use_completion
+    """
     for hour_index in expensive_hours:
         i = get_index(day_index, hour_index)
         needed_power = demand[i]
@@ -133,6 +146,19 @@ def get_affective_expansive_demand(expensive_hours, day_index, demand, productio
 
 def store_overproduction_to_fill_battery(expensive_hours, total_stored, battery_capacity, day_index, demand, production,
                                          battery_efficiency, battery_power, day_use):
+    """
+
+    @param expensive_hours: list of indexes of the expansive hours in the current day
+    @param total_stored: the total energy in the batteries, until the current day
+    @param battery_capacity: the batteries' capacity (all of them combined)
+    @param day_index: index of the current day
+    @param demand: list of the demand for every hour in the year
+    @param production: list of the solar production (for all the panels combined) for every hour in the year
+    @param battery_efficiency: the ratio between the energy used for charging, to the energy charged
+    @param battery_power: maximum power to charge and discharge from the batteries
+    @param day_use: dictionary with the energy lists names as keys (solar usage, solar sold...), and the lists to fill throughout the simulation
+    @return: total_stored: updated total stored, after filling overproduction
+    """
     for hour_index in range(expensive_hours[0] - 1, -1, -1):
         if total_stored >= battery_capacity:  # trying to fill the battery
             break
@@ -150,6 +176,19 @@ def store_overproduction_to_fill_battery(expensive_hours, total_stored, battery_
 
 def buy_in_cheap_hours(battery_capacity, expansive_completion, cheap_hours, total_stored, day_index, battery_power,
                        day_use, sell_profile, cost_profile):
+    """
+
+    @param battery_capacity: the batteries' capacity (all of them combined)
+    @param expansive_completion: amount of kwh to fill in cheap hours to cover the demand and selling in expansive hours
+    @param cheap_hours: list of indexes of the cheap hours in the current day
+    @param total_stored: the total energy in the batteries, until the current day
+    @param day_index: index of the current day
+    @param battery_power: maximum power to charge and discharge from the batteries
+    @param day_use: dictionary with the energy lists names as keys (solar usage, solar sold...), and the lists to fill throughout the simulation
+    @param sell_profile: list of the selling cost per kwh for each hour in the year
+    @param cost_profile: list of the buying cost per kwh for each hour in the year
+    @return: total_stored: updated total stored, after buying in cheap hours
+    """
     effective_battery_capacity = min(battery_capacity, expansive_completion)
     for i in ordered_cheap_hours(cheap_hours, cost_profile, day_index):
         # print(f"energy bought in hour {i}", end=" ")
