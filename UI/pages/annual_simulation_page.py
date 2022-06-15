@@ -10,6 +10,7 @@ from UI.UI_params import *
 from df_objects.df_objects import DemandDf, ProductionDf
 from hourly_simulation.parameters import Params, get_simulation_parameters, PARAMS_PATH
 from hourly_simulation.predict_demand import predict_demand_in_year
+from hourly_simulation.shift_day_in_year import shift_day_of_year
 from hourly_simulation.simulation import get_usage_profile, get_solar_production_profile, calculate_cost
 from hourly_simulation.strategies import use_strategies
 from output_graphs import yearly_graph_fig
@@ -122,7 +123,6 @@ def run_simulation(n_clicks, num_batteries, solar_panel_power_mw, simulated_year
         return {}, True, ""
     params = Params(**get_simulation_parameters(PARAMS_PATH))
     current_demand = DemandDf(pd.read_csv(os.path.join(SIMULATION_DEMAND_INPUT_PATH, place_to_research), index_col=0))
-    demand = predict_demand_in_year(current_demand, params, simulated_year)
     normalised_production = ProductionDf(
         pd.read_csv(os.path.join(SIMULATION_PRODUCTION_PROFILE_PATH, production_profile), index_col=0))
     normalised_production.df[normalised_production.SolarProduction] /= normalised_production.df[
@@ -134,13 +134,14 @@ def run_simulation(n_clicks, num_batteries, solar_panel_power_mw, simulated_year
                                         num_batteries=num_batteries,
                                         strategy=use_strategies[chosen_strategy],
                                         simulated_year=simulated_year)
+    demand = predict_demand_in_year(current_demand, params, simulated_year)
     try:
         test_simulation(electricity_use=electricity_use, demand=demand, production=get_solar_production_profile(
             normalised_production, solar_panel_power_kw, params), params=params, num_batteries=num_batteries)
     except AssertionError as e:
         logging.warning(traceback.format_exc())
     for_download = electricity_use.df.copy()
-    for_download["Demand"] = demand.df[demand.Demand]
+    for_download["Demand"] = shift_day_of_year(demand.df[demand.Demand].to_numpy(), demand.YearOfDemand)
     for_download[normalised_production.SolarProduction] = get_solar_production_profile(
         normalised_production, solar_panel_power_kw, params).df[ProductionDf.SolarProduction]
     last_simulation_results = for_download
