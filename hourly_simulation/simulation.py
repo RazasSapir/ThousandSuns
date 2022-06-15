@@ -75,7 +75,7 @@ def calculate_cost(electricity_use: ElectricityUseDf, params: Params, battery_ca
     capital_expenses = (-1 * npf.pmt(rate=params.LOAN_INTEREST_RATE, nper=params.LOAN_LENGTH,
                                      pv=total_loan) * params.LOAN_LENGTH - total_loan) / params.FACILITY_LIFE_SPAN
     # entrepreneur profit
-    total_equity = total_init_capex * (1 - params.LOAN_SIZE)
+    total_equity = total_init_capex * params.FACILITY_LIFE_SPAN * (1 - params.LOAN_SIZE)
     entrepreneur_profit = (-1 * npf.pmt(rate=params.ENTREPRENEUR_PROFIT, nper=params.FACILITY_LIFE_SPAN,
                                         pv=total_equity) * params.FACILITY_LIFE_SPAN - total_equity) / params.FACILITY_LIFE_SPAN
     # sum the cost
