@@ -19,7 +19,7 @@ class InputDataFrameWrapper(DataFrameWrapper):
     HourOfYear = 'HourOfYear'
 
     def __init__(self, df: pd.DataFrame):
-        DataFrameWrapper.__init__(self, df)
+        super().__init__(self, df)
 
 
 class SimulationResults(DataFrameWrapper):
@@ -31,7 +31,7 @@ class SimulationResults(DataFrameWrapper):
     Cost = 'Cost'
 
     def __init__(self, df: pd.DataFrame):
-        DataFrameWrapper.__init__(self, df)
+        super().__init__(self, df)
 
 
 class ElectricityUseDf(InputDataFrameWrapper):
@@ -58,7 +58,7 @@ class ElectricityUseDf(InputDataFrameWrapper):
                StoredSold]
 
     def __init__(self, df: pd.DataFrame):
-        InputDataFrameWrapper.__init__(self, df)
+        super().__init__(self, df)
 
 
 class DemandDf(InputDataFrameWrapper):
@@ -68,7 +68,7 @@ class DemandDf(InputDataFrameWrapper):
     Demand = 'Demand'
 
     def __init__(self, df: pd.DataFrame):
-        InputDataFrameWrapper.__init__(self, df)
+        super().__init__(self, df)
         try:
             self.YearOfDemand = int(df.columns[1])
         except Exception:
@@ -84,7 +84,7 @@ class ProductionDf(InputDataFrameWrapper):
     SolarProduction = 'SolarProduction'
 
     def __init__(self, df: pd.DataFrame):
-        InputDataFrameWrapper.__init__(self, df)
+        super().__init__(self, df)
 
 
 class CostElectricityDf(InputDataFrameWrapper):
@@ -94,7 +94,7 @@ class CostElectricityDf(InputDataFrameWrapper):
     Cost = "Cost_ILS_Kwh"
 
     def __init__(self, df: pd.DataFrame):
-        InputDataFrameWrapper.__init__(self, df)
+        super().__init__(self, df)
         try:
             self.YearOfCost = int(df.columns[1])
         except Exception:
