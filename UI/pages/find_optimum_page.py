@@ -11,7 +11,7 @@ from df_objects.df_objects import DemandDf, ProductionDf, SimulationResults
 from hourly_simulation.parameters import Params, get_simulation_parameters, PARAMS_PATH
 from hourly_simulation.strategies import use_strategies
 from output_graphs import simulation_graph
-from scenario_evaluator.run_senarios import run_scenarios
+from scenario_evaluator.run_scenarios import run_scenarios
 
 block_red = {"color": "red", 'display': 'block'}
 block_green = {"color": "green", 'display': 'block'}
